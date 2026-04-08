@@ -396,6 +396,10 @@
                                 <div>
                                     <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">كلمة المرور الجديدة</label>
                                     <input type="password" id="settingsNewPassword" oninput="checkPasswordStrength(this.value)" placeholder="••••••••">
+                                </div>
+                                <div>
+                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">تأكيد كلمة المرور</label>
+                                    <input type="password" id="settingsConfirmPassword" placeholder="••••••••">
                                     <div class="flex gap-1.5 mt-4 px-1">
                                         <div id="pwd-str-1" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
                                         <div id="pwd-str-2" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
@@ -403,10 +407,6 @@
                                         <div id="pwd-str-4" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
                                     </div>
                                     <p id="pwd-strengthText" class="text-[10px] font-bold mt-2 mr-1 text-gray-400">مستوى الأمان</p>
-                                </div>
-                                <div>
-                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">تأكيد كلمة المرور</label>
-                                    <input type="password" id="settingsConfirmPassword" placeholder="••••••••">
                                 </div>
                                 <p class="text-xs text-gray-400">اترك الحقول الفارغة إذا كنت لا تريد تغيير كلمة المرور.</p>
                                 <button id="settingsSaveBtn" type="submit" class="btn-action">
@@ -851,7 +851,7 @@
                 checkPasswordStrength('');
             } catch (error) {
                 console.error('Account settings error:', error);
-                let msg = 'حدث خطأ أثناء حفظ الإعدادات.';
+                let msg = 'كلمة المرور الحالية خطأ';
                 if (error.code === 'auth/wrong-password') msg = 'كلمة المرور الحالية غير صحيحة.';
                 else if (error.code === 'auth/requires-recent-login') msg = 'يرجى تسجيل الدخول مرة أخرى لتغيير كلمة المرور.';
                 else if (error.code === 'auth/weak-password') msg = 'كلمة المرور ضعيفة، جرب كلمة أقوى.';
