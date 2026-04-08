@@ -14,6 +14,12 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAjH6JBRtesJH9vLuHzYTxL4iakHVazzgE",
   authDomain: "niche-ef31e.firebaseapp.com",
@@ -27,6 +33,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
+window.db = db;
+window.doc = doc;
+window.setDoc = setDoc;
+window.getDoc = getDoc;
 
 // 👇 أهم خطوة (عشان HTML يشوفهم)
 window.auth = auth;
