@@ -816,95 +816,22 @@ window.location.href = "dashboard.html";
 async function handleGoogleLogin() {
     try {
         const provider = new window.GoogleAuthProvider();
+
         const result = await window.signInWithPopup(window.auth, provider);
-        const isNewUser = result?.additionalUserInfo?.isNewUser;
-        const user = result.user;
 
-        if (currentAuthMode === 'login') {
-            if (isNewUser) {
-                await window.deleteUser(user);
-                await window.auth.signOut();
-                showToast('هذا المستخدم غير موجود. الرجاء التسجيل أولاً.', true);
-                return;
-            }
+        showToast("تم تسجيل الدخول بجوجل 🎉", false);
+        toggleModal('authModal');
+        window.location.href = "dashboard.html";
 
-            showToast('تم تسجيل الدخول بجوجل 🎉', false);
-            toggleModal('authModal');
-            window.location.href = 'dashboard.html';
-            return;
-        }
-
-        if (!isNewUser) {
-            await window.auth.signOut();
-            showToast('هذا الحساب موجود بالفعل. الرجاء تسجيل الدخول.', true);
-            switchAuth('login');
-            return;
-        }
-
-        currentGoogleUser = user;
-        showGoogleSignupForm(user);
     } catch (error) {
-        console.error('Google Error:', error);
+        console.error("Google Error:", error);
 
+        // ❌ تجاهل الأخطاء الطبيعية
         if (error.code === 'auth/popup-closed-by-user') return;
         if (error.code === 'auth/cancelled-popup-request') return;
 
+        // ✅ بس هنا نعرض error حقيقي
         showToast(error.message, true);
-    }
-}
-
-async function handleGoogleCompleteSignup(event) {
-    event.preventDefault();
-
-    if (!currentGoogleUser) {
-        showToast('لم يتم إنشاء حساب Google بعد. حاول مجدداً.', true);
-        return;
-    }
-
-    const nameValue = document.getElementById('googleName').value.trim();
-    const password = document.getElementById('googlePassword').value.trim();
-    const confirmPassword = document.getElementById('googleConfirmPassword').value.trim();
-
-    const namePattern = /^[\u0600-\u06FFa-zA-Z\s]+$/;
-    if (!namePattern.test(nameValue) || nameValue.length < 10) {
-        showToast('الاسم يجب أن يحتوي على حروف فقط وأن يكون 10 حروف على الأقل.', true);
-        return;
-    }
-
-    if (password.length < 8) {
-        showToast('كلمة المرور يجب أن تكون 8 أحرف فأكثر.', true);
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        showToast('كلمتا المرور غير متطابقتين.', true);
-        return;
-    }
-
-    const btn = document.getElementById('googleSignupBtn');
-    const loader = document.getElementById('googleSignupLoader');
-    const text = document.getElementById('googleSignupText');
-
-    btn.disabled = true;
-    loader.classList.remove('hidden');
-    text.classList.add('hidden');
-
-    try {
-        await window.updateProfile(currentGoogleUser, { displayName: nameValue });
-        await window.updatePassword(currentGoogleUser, password);
-        await window.sendEmailVerification(currentGoogleUser);
-
-        showToast('تم إكمال التسجيل. يرجى تأكيد بريدك الإلكتروني قبل الدخول.', false);
-        await window.auth.signOut();
-        toggleModal('authModal');
-        switchAuth('login');
-    } catch (error) {
-        console.error('Google completion error:', error);
-        showToast('فشل إكمال التسجيل. حاول مرة أخرى.', true);
-    } finally {
-        btn.disabled = false;
-        loader.classList.add('hidden');
-        text.classList.remove('hidden');
     }
 }
     </script>

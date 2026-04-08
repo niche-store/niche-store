@@ -199,14 +199,15 @@
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             
             <div class="lg:col-span-1 space-y-2">
-                <a href="#" class="sidebar-link active"><i class="fas fa-th-large"></i> لوحة التحكم</a>
+                <a href="#" id="dashboardLink" onclick="activateSection('dashboard'); return false;" class="sidebar-link active"><i class="fas fa-th-large"></i> لوحة التحكم</a>
                 <a href="shop.html" class="sidebar-link"><i class="fas fa-shopping-bag"></i> اطلب منتجات</a>
                 <a href="#" class="sidebar-link"><i class="fas fa-box"></i> طلباتي</a>
                 <a href="#" class="sidebar-link"><i class="fas fa-heart"></i> المفضلة</a>
-                <a href="#" class="sidebar-link"><i class="fas fa-user-cog"></i> إعدادات الحساب</a>
+                <a href="#" id="settingsLink" onclick="activateSection('settings'); return false;" class="sidebar-link"><i class="fas fa-user-cog"></i> إعدادات الحساب</a>
             </div>
 
-            <div class="lg:col-span-3 space-y-8">
+            <div class="lg:col-span-3">
+                <div id="dashboardOverviewSection" class="space-y-8">
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="dashboard-card flex items-center gap-5">
@@ -285,7 +286,42 @@
                         </div>
                     </div>
                 </div>
-
+                </div>
+                <div id="accountSettingsSection" class="space-y-8 hidden">
+                    <div class="dashboard-card">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-xl font-black">إعدادات الحساب</h2>
+                                <p class="text-gray-500 text-sm mt-2">تعديل الاسم وكلمة المرور الخاصة بحسابك.</p>
+                            </div>
+                            <i class="fas fa-user-cog text-2xl text-black"></i>
+                        </div>
+                        <form onsubmit="handleAccountSettingsSave(event)">
+                            <div class="grid gap-6">
+                                <div>
+                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">البريد الإلكتروني</label>
+                                    <input type="email" id="settingsEmail" readonly class="bg-gray-100 cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">الاسم</label>
+                                    <input type="text" id="settingsName" placeholder="اكتب اسمك" required>
+                                </div>
+                                <div>
+                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">كلمة المرور الجديدة</label>
+                                    <input type="password" id="settingsNewPassword" placeholder="••••••••">
+                                </div>
+                                <div>
+                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">تأكيد كلمة المرور</label>
+                                    <input type="password" id="settingsConfirmPassword" placeholder="••••••••">
+                                </div>
+                                <p class="text-xs text-gray-400">اترك الحقول فارغة إذا كنت لا تريد تغيير كلمة المرور.</p>
+                                <button id="settingsSaveBtn" type="submit" class="btn-action">
+                                    حفظ التغييرات
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -578,9 +614,78 @@
                 document.getElementById('userGreeting').textContent = userName;
                 document.getElementById('profileName').textContent = userName;
                 document.getElementById('profileEmail').textContent = user.email;
-                
+                updateSettingsForm(user);
+                activateSection('dashboard');
                 loadUserOrders(user.uid);
                 loadShippingAddress();
+            }
+        }
+
+        function activateSection(section) {
+            const dashboard = document.getElementById('dashboardOverviewSection');
+            const settings = document.getElementById('accountSettingsSection');
+            dashboard.classList.toggle('hidden', section !== 'dashboard');
+            settings.classList.toggle('hidden', section !== 'settings');
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+            const activeLink = document.getElementById(section + 'Link');
+            if (activeLink) activeLink.classList.add('active');
+        }
+
+        function updateSettingsForm(user) {
+            const displayName = user.displayName || user.email.split('@')[0];
+            document.getElementById('settingsName').value = displayName;
+            document.getElementById('settingsEmail').value = user.email;
+            document.getElementById('settingsNewPassword').value = '';
+            document.getElementById('settingsConfirmPassword').value = '';
+        }
+
+        async function handleAccountSettingsSave(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('settingsName').value.trim();
+            const password = document.getElementById('settingsNewPassword').value.trim();
+            const confirmPassword = document.getElementById('settingsConfirmPassword').value.trim();
+            const btn = document.getElementById('settingsSaveBtn');
+
+            if (!name || name.length < 3) {
+                showToast('الاسم يجب أن يكون 3 أحرف على الأقل.', true);
+                return;
+            }
+
+            if (password && password !== confirmPassword) {
+                showToast('كلمة المرور وتأكيدها غير متطابقين.', true);
+                return;
+            }
+
+            if (password && password.length < 8) {
+                showToast('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.', true);
+                return;
+            }
+
+            btn.disabled = true;
+
+            try {
+                const user = window.auth.currentUser;
+                if (!user) throw new Error('غير مسجل الدخول');
+
+                if (name !== (user.displayName || '')) {
+                    await window.updateProfile(user, { displayName: name });
+                }
+
+                if (password) {
+                    await window.updatePassword(user, password);
+                }
+
+                showToast('تم حفظ إعدادات الحساب بنجاح.', false);
+                document.getElementById('profileName').textContent = name;
+                document.getElementById('userGreeting').textContent = name;
+            } catch (error) {
+                let msg = 'حدث خطأ أثناء حفظ الإعدادات.';
+                if (error.code === 'auth/requires-recent-login') msg = 'يرجى تسجيل الدخول مرة أخرى لتغيير كلمة المرور.';
+                if (error.code === 'auth/weak-password') msg = 'كلمة المرور ضعيفة، جرب كلمة أقوى.';
+                showToast(msg, true);
+            } finally {
+                btn.disabled = false;
             }
         }
 
