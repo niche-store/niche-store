@@ -791,14 +791,21 @@
                 return;
             }
 
-            if (password && !currentPassword) {
-                showToast('يرجى إدخال كلمة المرور الحالية لتغيير كلمة المرور.', true);
-                return;
-            }
-
-            if (password && password !== confirmPassword) {
-                showToast('كلمة المرور وتأكيدها غير متطابقين.', true);
-                return;
+            // Password change validation
+            const hasPasswordFields = currentPassword || password || confirmPassword;
+            if (hasPasswordFields) {
+                if (!currentPassword || !password || !confirmPassword) {
+                    showToast('يرجى ملء جميع حقول كلمة المرور لتغييرها.', true);
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    showToast('كلمة المرور وتأكيدها غير متطابقين.', true);
+                    return;
+                }
+                if (password.length < 8) {
+                    showToast('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.', true);
+                    return;
+                }
             }
 
             const phone = document.getElementById('settingsPhone').value.trim();
@@ -806,11 +813,6 @@
 
             if (phone && !/^01[0-9]{9}$/.test(phone)) {
                 showToast('رقم الهاتف يجب أن يكون صحيحاً ويبدأ بـ 01.', true);
-                return;
-            }
-
-            if (password && password.length < 8) {
-                showToast('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.', true);
                 return;
             }
 
