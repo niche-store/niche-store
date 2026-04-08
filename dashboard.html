@@ -581,40 +581,26 @@
             }, 3000);
         }
 
-        // ---- Firestore helpers ----
-        async function getAccountMeta(uid) {
-            try {
-                const snap = await window.getDoc(window.doc(window.db, 'users', uid));
-                return snap.exists() ? (snap.data().meta || { phone: '', gender: '' }) : { phone: '', gender: '' };
-            } catch(e) {
-                return { phone: '', gender: '' };
-            }
-        }
-
-        async function saveAccountMeta(uid, meta) {
-            await window.setDoc(window.doc(window.db, 'users', uid), { meta }, { merge: true });
-        }
-
-        async function getShippingAddress(uid) {
-            try {
-                const snap = await window.getDoc(window.doc(window.db, 'users', uid));
-                return snap.exists() ? (snap.data().shippingAddress || null) : null;
-            } catch(e) {
-                return null;
-            }
-        }
-
-        async function saveShippingAddress(uid, address) {
-            await window.setDoc(window.doc(window.db, 'users', uid), { shippingAddress: address }, { merge: true });
-        }
-
-        // Store orders in localStorage (orders remain local for now)
+        // Store orders in localStorage
         function getOrders() {
             const orders = localStorage.getItem('userOrders');
             return orders ? JSON.parse(orders) : [
                 { id: '#8821', date: '2026-04-01', item: 'نايك Air Max', status: 'completed', price: '1,250 ج.م' },
                 { id: '#8895', date: '2026-04-07', item: 'تيشيرت بريميوم', status: 'pending', price: '350 ج.م' }
             ];
+        }
+
+        function saveOrders(orders) {
+            localStorage.setItem('userOrders', JSON.stringify(orders));
+        }
+
+        function getShippingAddress() {
+            const address = localStorage.getItem('userShippingAddress');
+            return address ? JSON.parse(address) : null;
+        }
+
+        function saveShippingAddress(address) {
+            localStorage.setItem('userShippingAddress', JSON.stringify(address));
         }
 
         // Load Orders Function
@@ -643,9 +629,9 @@
             `).join('');
         }
 
-        // Load Shipping Address from Firestore
-        async function loadShippingAddress(uid) {
-            const address = await getShippingAddress(uid);
+        // Load Shipping Address
+        function loadShippingAddress() {
+            const address = getShippingAddress();
             const display = document.getElementById('shippingAddressDisplay');
             
             if (address) {
@@ -659,15 +645,10 @@
                         <button onclick="toggleModal('shippingModal')" class="text-blue-600 text-sm font-bold underline mt-4">تعديل العنوان</button>
                     </div>
                 `;
-            } else {
-                display.innerHTML = `
-                    <p class="text-gray-500 text-sm">لم تقم بإضافة عنوان بعد.</p>
-                    <button onclick="toggleModal('shippingModal')" class="text-blue-600 text-sm font-bold underline">إضافة عنوان</button>
-                `;
             }
         }
 
-        // Handle Shipping Address Form - saves to Firestore
+        // Handle Shipping Address Form
         async function handleAddShippingAddress(event) {
             event.preventDefault();
 
@@ -691,24 +672,15 @@
             text.classList.add('hidden');
 
             try {
-                const user = window.auth.currentUser;
-                if (!user) throw new Error('غير مسجل الدخول');
-
                 const address = { city, district, street, building, phone };
-                await saveShippingAddress(user.uid, address);
-
+                saveShippingAddress(address);
                 showToast("تم حفظ العنوان بنجاح ✓", false);
                 toggleModal('shippingModal');
-                await loadShippingAddress(user.uid);
+                loadShippingAddress();
                 
-                // Reset form fields manually
-                document.getElementById('shippingCity').value = '';
-                document.getElementById('shippingDistrict').value = '';
-                document.getElementById('shippingStreet').value = '';
-                document.getElementById('shippingBuilding').value = '';
-                document.getElementById('shippingPhone').value = '';
+                // Reset form
+                document.querySelector('form').reset();
             } catch (error) {
-                console.error('Shipping address error:', error);
                 showToast("حدث خطأ ما، حاول مجدداً", true);
             }
 
@@ -738,7 +710,7 @@
                 await updateSettingsForm(user);
                 activateSection('dashboard');
                 loadUserOrders(user.uid);
-                await loadShippingAddress(user.uid);
+                loadShippingAddress();
             }
         }
 
@@ -782,11 +754,17 @@
             });
         }
 
-        // updateSettingsForm - reads from Firestore
         async function updateSettingsForm(user) {
             const displayName = user.displayName || user.email.split('@')[0];
-            const meta = await getAccountMeta(user.uid);
-            document.getElementById('settingsName').value = displayName;
+            const docRef = window.doc(window.db, 'users', user.uid);
+            const docSnap = await window.getDoc(docRef);
+
+            let meta = { phone: '', gender: '', name: '' };
+            if (docSnap.exists()) {
+                meta = docSnap.data();
+            }
+
+            document.getElementById('settingsName').value = meta.name || displayName;
             document.getElementById('settingsEmail').value = user.email;
             document.getElementById('settingsPhone').value = meta.phone || '';
             document.getElementById('settingsGender').value = meta.gender || '';
@@ -797,7 +775,6 @@
             checkPasswordStrength('');
         }
 
-        // handleAccountSettingsSave - saves meta to Firestore
         async function handleAccountSettingsSave(event) {
             event.preventDefault();
 
@@ -861,8 +838,12 @@
                     await window.updatePassword(user, password);
                 }
 
-                // Save phone and gender to Firestore
-                await saveAccountMeta(user.uid, { phone, gender });
+                await window.setDoc(window.doc(window.db, "users", user.uid), {
+                    name: name,
+                    email: user.email,
+                    phone: phone,
+                    gender: gender
+                }, { merge: true });
 
                 showToast('تم حفظ إعدادات الحساب بنجاح.', false);
                 document.getElementById('profileName').textContent = name;
@@ -885,7 +866,7 @@
 
         // Firebase Auth State
         const checkAuth = setInterval(() => {
-            if (window.auth && window.db && window.doc && window.setDoc && window.getDoc) {
+            if (window.auth) {
                 clearInterval(checkAuth);
                 window.auth.onAuthStateChanged(handleAuthStateChange);
             }
