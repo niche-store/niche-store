@@ -217,12 +217,12 @@
 <body>
 
     <nav id="main-nav" class="nav-wrapper flex justify-between items-center">
-        <a href="index.html" class="logo">NICHE</a>
+        <a href="index" class="logo">NICHE</a>
         <ul class="hidden md:flex gap-10">
-            <li><a href="index.html" class="nav-link">الرئيسية</a></li>
-            <li><a href="shoes.html" class="nav-link">الأحذية</a></li>
-            <li><a href="clothes.html" class="nav-link">الملابس</a></li>
-            <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
+            <li><a href="index" class="nav-link">الرئيسية</a></li>
+            <li><a href="shoes" class="nav-link">الأحذية</a></li>
+            <li><a href="clothes" class="nav-link">الملابس</a></li>
+            <li><a href="contact" class="nav-link">تواصل معنا</a></li>
         </ul>
         <div class="flex items-center gap-6">
             <div class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2">
@@ -302,7 +302,7 @@
                 <p class="text-gray-500 text-lg font-medium mb-10">
                     أنت لست وحدك! اكتشف مجموعاتنا الكاملة والعروض الخاصة
                 </p>
-                <a href="index.html" class="inline-flex items-center gap-2 bg-black text-white px-10 py-4 rounded-2xl font-black hover:bg-gray-900 transition-all hover:scale-[1.02]">
+                <a href="index" class="inline-flex items-center gap-2 bg-black text-white px-10 py-4 rounded-2xl font-black hover:bg-gray-900 transition-all hover:scale-[1.02]">
                     عودة للرئيسية
                     <span>→</span>
                 </a>
@@ -331,10 +331,10 @@
                 <div>
                     <h4 class="font-black text-lg mb-6 text-white">روابط هامة</h4>
                     <ul class="space-y-4 text-gray-400 font-bold text-sm">
-                        <li><a href="index.html" class="hover:text-white transition-colors">الرئيسية</a></li>
-                        <li><a href="shoes.html" class="hover:text-white transition-colors">الأحذية</a></li>
-                        <li><a href="clothes.html" class="hover:text-white transition-colors">الملابس</a></li>
-                        <li><a href="contact.html" class="hover:text-white transition-colors">تواصل معنا</a></li>
+                        <li><a href="index" class="hover:text-white transition-colors">الرئيسية</a></li>
+                        <li><a href="shoes" class="hover:text-white transition-colors">الأحذية</a></li>
+                        <li><a href="clothes" class="hover:text-white transition-colors">الملابس</a></li>
+                        <li><a href="contact" class="hover:text-white transition-colors">تواصل معنا</a></li>
                     </ul>
                 </div>
 
@@ -351,7 +351,7 @@
                     <h4 class="font-black text-lg mb-6 text-white">خليك معانا</h4>
                     <p class="text-gray-500 text-xs mb-6 font-bold">انضم إلينا الآن لتصلك أحدث العروض والخصومات الحصرية</p>
                     
-                    <a href="index.html" 
+                    <a href="index" 
                         class="w-full bg-white text-black py-4 px-6 rounded-xl text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg">
                         <span>انضم إلينا الآن</span>
                         <i class="fas fa-user-plus text-xs"></i>

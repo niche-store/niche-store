@@ -298,14 +298,14 @@
 <body>
 
     <nav id="main-nav" class="nav-wrapper flex justify-between items-center">
-        <a href="Home.html" class="logo">
+        <a href="index" class="logo">
     NICHE
 </a>
         <ul class="hidden md:flex gap-10">
-            <li><a href="index.html" class="nav-link">الرئيسية</a></li>
-            <li><a href="shoes.html" class="nav-link">الأحذية</a></li>
-            <li><a href="clothes.html" class="nav-link">الملابس</a></li>
-            <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
+            <li><a href="index" class="nav-link">الرئيسية</a></li>
+            <li><a href="shoes" class="nav-link">الأحذية</a></li>
+            <li><a href="clothes" class="nav-link">الملابس</a></li>
+            <li><a href="contact" class="nav-link">تواصل معنا</a></li>
         </ul>
         <div class="flex items-center gap-6">
             <div onclick="toggleModal('authModal')" class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2">
@@ -692,7 +692,7 @@ if (!userCredential.user.emailVerified) {
 showToast("تم تسجيل الدخول بنجاح 🎉", false);
 toggleModal('authModal');
 // بعد نجاح تسجيل الدخول
-window.location.href = "dashboard.html";
+window.location.href = "dashboard";
     } catch (error) {
         let msg = "يرجي التأكد من صحة البيانات";
 
@@ -719,7 +719,7 @@ async function handleGoogleLogin() {
 
         showToast("تم تسجيل الدخول بجوجل 🎉", false);
         toggleModal('authModal');
-        window.location.href = "dashboard.html";
+        window.location.href = "dashboard";
 
     } catch (error) {
         console.error("Google Error:", error);
