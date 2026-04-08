@@ -413,8 +413,9 @@
     
     <script>
         function showPage() {
-    document.body.style.display = 'block';
-}
+            document.body.style.display = 'block';
+        }
+
         // Navigation Scroll Effect
         window.addEventListener('scroll', () => {
             const nav = document.getElementById('main-nav');
@@ -567,33 +568,12 @@
             window.location.href = 'index.html';
         };
 
-        // Firebase Auth State
-        if (window.auth) {
-            window.auth.onAuthStateChanged((user) => {
-    if (!user) {
-        window.location.href = 'index.html';
-    } else {
-        showPage(); // 👈 ضيف دي هنا أول سطر
-
-        const userName = user.displayName || user.email.split('@')[0];
-        document.getElementById('userGreeting').textContent = userName;
-        document.getElementById('profileName').textContent = userName;
-        document.getElementById('profileEmail').textContent = user.email;
-        
-        loadUserOrders(user.uid);
-        loadShippingAddress();
-    }
-});
-        }
-            // If Firebase not loaded yet, load default data
-            setTimeout(() => {
-    if (window.auth) {
-        window.auth.onAuthStateChanged((user) => {
+        // Firebase Auth State Handler
+        function handleAuthStateChange(user) {
             if (!user) {
                 window.location.href = 'index.html';
             } else {
-                showPage(); // 👈 أهم سطر
-
+                showPage();
                 const userName = user.displayName || user.email.split('@')[0];
                 document.getElementById('userGreeting').textContent = userName;
                 document.getElementById('profileName').textContent = userName;
@@ -602,9 +582,19 @@
                 loadUserOrders(user.uid);
                 loadShippingAddress();
             }
-        });
-    }
-}, 1000);
+        }
+
+        // Firebase Auth State
+        if (window.auth) {
+            window.auth.onAuthStateChanged(handleAuthStateChange);
+        } else {
+            // If Firebase not loaded yet, load default data
+            setTimeout(() => {
+                if (window.auth) {
+                    window.auth.onAuthStateChanged(handleAuthStateChange);
+                }
+            }, 1000);
+        }
 
         // Close modal when clicking outside
         window.onclick = (e) => {
