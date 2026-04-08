@@ -35,4 +35,5 @@ window.sendPasswordResetEmail = sendPasswordResetEmail;
 window.GoogleAuthProvider = GoogleAuthProvider;
 window.signInWithPopup = signInWithPopup;
 window.updateProfile = updateProfile;
+window.updatePassword = updatePassword;
 console.log("Firebase شغال 🔥");
