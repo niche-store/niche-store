@@ -692,7 +692,7 @@ if (!userCredential.user.emailVerified) {
 showToast("تم تسجيل الدخول بنجاح 🎉", false);
 toggleModal('authModal');
 // بعد نجاح تسجيل الدخول
-window.location.href = "dashboard";
+window.location.href = "dashboard.html";
     } catch (error) {
         let msg = "يرجي التأكد من صحة البيانات";
 
@@ -719,7 +719,7 @@ async function handleGoogleLogin() {
 
         showToast("تم تسجيل الدخول بجوجل 🎉", false);
         toggleModal('authModal');
-        window.location.href = "dashboard";
+        window.location.href = "dashboard.html";
 
     } catch (error) {
         console.error("Google Error:", error);
