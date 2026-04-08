@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niche Store | متجر نيتش</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Success Notification Style --- */
+.success-toast {
+    position: fixed;
+    top: -100px; /* مخفي فوق الشاشة */
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 15px 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 3000;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.success-toast.show {
+    top: 40px; /* يظهر وينزل لمكانه */
+}
+
+/* أنيميشن علامة الصح */
+.check-icon {
+    width: 28px;
+    height: 28px;
+    background: #10b981;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    animation: scaleIn 0.5s ease forwards;
+}
+
+@keyframes scaleIn {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+
+/* تأثير الـ Bounce للنص */
+.toast-text {
+    font-weight: 700;
+    color: #1a1a1a;
+    font-size: 15px;
+}
+        body { font-family: 'Cairo', sans-serif; background-color: #fdfdfd; scroll-behavior: smooth; overflow-x: hidden; color: #1a1a1a; }
+
+        /* --- القائمة العائمة --- */
+        .nav-wrapper {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 1100px; z-index: 1000;
+            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px);
+            border-radius: 25px; padding: 15px 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .nav-wrapper.scrolled { top: 0; width: 100%; max-width: 100%; border-radius: 0; padding: 10px 60px; background: #000; }
+
+        /* --- أنيميشن الماوس --- */
+        .nav-link { position: relative; font-weight: 600; color: #ffffff; padding: 5px 0; transition: 0.3s; opacity: 0.8; }
+        .nav-link:hover { opacity: 1; }
+        .nav-link::after {
+            content: ""; position: absolute; bottom: -2px; left: 50%;
+            width: 0; height: 2px; background: #ffffff;
+            transition: all 0.3s ease; transform: translateX(-50%);
+        }
+        .nav-link:hover::after { width: 100%; }
+
+        /* --- المودال والأشكال الجديدة --- */
+        .modal { 
+    display: none; 
+    position: fixed; 
+    z-index: 2000; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.7); 
+    backdrop-filter: blur(8px); 
+    /* التعديل الجديد هنا */
+    align-items: center; 
+    justify-content: center; 
+}
+        .modal-content {
+    background: white; 
+    padding: 45px;
+    width: 90%; 
+    max-width: 480px; 
+    border-radius: 40px;
+    position: relative; 
+    animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.3);
+    /* مسحنا margin: 3% auto */
+}
+        @keyframes popUp { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        input {
+            width: 100%; padding: 16px 22px; 
+            background: #f8f9fa !important; border: 2px solid transparent !important;
+            border-radius: 18px; outline: none; transition: 0.3s; font-weight: 600;
+        }
+        input:focus { border-color: #000 !important; background: #fff !important; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+
+        .btn-action {
+            background: #000; color: #fff; width: 100%; padding: 18px;
+            border-radius: 18px; font-weight: 900; font-size: 18px;
+            transition: all 0.3s; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); background: #111; }
+        .btn-action:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
+
+        /* --- الهيرو والكروت --- */
+        .hero-section { background: radial-gradient(circle at 10% 20%, #f9f9f9 0%, #ffffff 100%); padding: 220px 20px 100px; }
+        .product-card {
+            background: white; border-radius: 35px; padding: 25px;
+            transition: all 0.5s ease; border: 1px solid #f1f1f1;
+        }
+        .product-card:hover { transform: translateY(-15px); box-shadow: 0 30px 60px rgba(0,0,0,0.07); border-color: #000; }
+        .image-holder { background: #f7f7f7; border-radius: 25px; height: 300px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .blur-circle {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.8;
+
+    animation: floatRandom 18s ease-in-out infinite;
+}
+
+.circle-1 {
+    background: #000;
+    top: 10%;
+    right: 10%;
+    animation-delay: 0s;
+    animation-duration: 10s;
+}
+
+.circle-2 {
+    background: #999;
+    bottom: 10%;
+    left: 10%;
+    animation-delay: 4s;
+    animation-duration: 15s;
+}
+
+@keyframes floatRandom {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    20% {
+        transform: translate(60px, -40px) scale(1.05);
+    }
+    40% {
+        transform: translate(-50px, 60px) scale(0.95);
+    }
+    60% {
+        transform: translate(40px, 30px) scale(1.02);
+    }
+    80% {
+        transform: translate(-30px, -50px) scale(0.98);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+/* تعديل شيب موسم جديد 2026 */
+.season-badge {
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; /* شادو أوضح */
+    z-index: 10;
+}
+
+/* السهم المخفي */
+/* تنسيق الدائرة السوداء والسهم الأبيض */
+.arrow-circle {
+    position: absolute;
+    bottom: -30px; /* مكان البداية خلف الشيب */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* أنيميشن دخول أنعم */
+    
+    /* الدائرة السوداء */
+    width: 35px;
+    height: 35px;
+    background-color: #000;
+    border-radius: 50%;
+    
+    /* محاذاة السهم في المنتصف */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* السهم الأبيض */
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    
+    /* ظل خفيف للدائرة */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    
+    /* تأكيد أنه خلف الشيب */
+    z-index: -1;
+}
+
+/* التعديل هنا: تحديث اسم الكلاس في الـ hover */
+.season-badge:hover .arrow-circle {
+    opacity: 1;
+    bottom: -50px; /* يظهر وينزل لتحت شوية */
+    animation: bounceCircle 1.5s infinite;
+}
+
+/* أنيميشن حركة الدائرة */
+@keyframes bounceCircle {
+    0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0);}
+    40% {transform: translateX(-50%) translateY(-8px);}
+    60% {transform: translateX(-50%) translateY(-4px);}
+}
+.logo {
+    position: relative;
+    font-size: 28px;
+    font-weight: 900;
+    color: white;
+    text-decoration: none;
+    letter-spacing: -1px;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+/* الخط اللي تحت */
+.logo::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    width: 0%;
+    height: 2px;
+    background: white;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+/* hover */
+.logo:hover {
+    letter-spacing: 1px;
+
+    text-shadow: 
+        0 0 6px rgba(255,255,255,0.6),
+        0 0 12px rgba(255,255,255,0.4),
+        0 0 20px rgba(255,255,255,0.2);
+}
+
+/* الخط يتمد من النص */
+.logo:hover::after {
+    width: 100%;
+}
+/* كلاس خاص بحالة الخطأ */
+.success-toast.error-status .check-icon {
+    background: #ef4444; /* لون أحمر */
+}
+.loader {
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    position: relative;
+}
+
+.loader::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.1);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+    </style>
+</head>
+<body>
+
+    <nav id="main-nav" class="nav-wrapper flex justify-between items-center">
+        <a href="Home.html" class="logo">
+    NICHE
+</a>
+        <ul class="hidden md:flex gap-10">
+            <li><a href="index.html" class="nav-link">الرئيسية</a></li>
+            <li><a href="shoes.html" class="nav-link">الأحذية</a></li>
+            <li><a href="clothes.html" class="nav-link">الملابس</a></li>
+            <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
+        </ul>
+        <div class="flex items-center gap-6">
+            <div onclick="toggleModal('authModal')" class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2">
+                <span class="text-xs font-bold hidden md:block">حسابي</span>
+                <span class="text-2xl" style="filter: brightness(0) invert(1);">👤</span>
+            </div>
+            <div class="relative cursor-pointer hover:scale-110 transition">
+                <span class="text-2xl">🛒</span>
+                <span class="absolute -top-2 -right-2 bg-white text-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">3</span>
+            </div>
+        </div>
+    </nav>
+
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <button onclick="toggleModal('authModal')" class="absolute top-8 left-8 text-2xl text-gray-300 hover:text-black transition-all">✕</button>
+            
+            <div id="loginForm">
+                <div class="text-center mb-10">
+                    <h2 class="text-4xl font-black mb-3 uppercase tracking-tighter">Login</h2>
+                    <p class="text-gray-400 text-sm font-bold">أهلاً بك مجدداً في نيتش</p>
+                </div>
+                <form onsubmit="handleLogin(event)" novalidate>
+                    
+    <div class="mb-4">
+        <label class="text-[12px] font-black uppercase mb-1 block mr-1">البريد الإلكتروني</label>
+        <input type="email" id="loginEmail" placeholder="name@example.com">
+    </div>
+
+    <div class="mb-6">
+        <label class="text-[12px] font-black uppercase mb-1 block mr-1">كلمة المرور</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+
+    <button id="loginBtn" class="btn-action">
+        <span id="loginText">تسجيل الدخول</span>
+        <span id="loginLoader" class="loader hidden"></span>
+    </button>
+    <div class="mt-4">
+    <button type="button" onclick="handleGoogleLogin()" 
+        class="w-full bg-white border-2 border-gray-200 text-black py-3 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-50 transition">
+
+        <img src="https://developers.google.com/identity/images/g-logo.png" class="w-5">
+        تسجيل باستخدام Google
+    </button>
+</div>
+    <class="text-left text-xs mt-2">
+  <span onclick="handleForgotPassword()" class="cursor-pointer text-gray-400 hover:text-black underline">
+    هل نسيت كلمة المرور؟
+  </span>
+</form>
+                <p class="text-center mt-10 text-sm font-bold text-gray-400">جديد هنا؟ <span onclick="switchAuth('signup')" class="text-black cursor-pointer underline underline-offset-8">أنشئ حسابك الآن</span></p>
+            </div>
+
+            <div id="signupForm" class="hidden">
+                <div class="text-center mb-10">
+                    <h2 class="text-4xl font-black mb-3 uppercase tracking-tighter">Join Us</h2>
+                    <p class="text-gray-400 text-sm font-bold">ابدأ تجربة تسوق فريدة</p>
+                </div>
+                <form id="signupFormElement" onsubmit="handleSignup(event)" novalidate>
+                    <div class="mb-4">
+        <label class="text-[12px] font-black uppercase mb-1 block mr-1">الاسم بالكامل</label>
+        <input type="text" id="regName" placeholder="اكتب اسمك هنا" minlength="10" maxlength="30" required>
+    </div>
+                    <div class="mb-4"><label class="text-[12px] font-black uppercase mb-1 block mr-1">البريد الإلكتروني</label><input type="email" id="regEmail" placeholder="email@example.com" required></div>
+                    <div class="mb-4 relative">
+                        <label class="text-[12px] font-black uppercase mb-1 block mr-1">كلمة المرور</label>
+                        <input type="password" id="regPassword" oninput="checkStrength(this.value)" placeholder="••••••••" required>
+                        <div class="flex gap-1.5 mt-4 px-1">
+                            <div id="str-1" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                            <div id="str-2" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                            <div id="str-3" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                            <div id="str-4" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                        </div>
+                        <p id="strengthText" class="text-[10px] font-bold mt-2 mr-1 text-gray-400">مستوى الأمان</p>
+                    </div>
+                    <div class="mb-6">
+                        <label class="text-[12px] font-black uppercase mb-1 block mr-1">تأكيد كلمة المرور</label>
+                        <input type="password" id="confirmPassword" oninput="checkMatch()" placeholder="••••••••" required>
+                        <p id="matchError" class="text-[10px] font-bold mt-2 mr-1 text-red-500 hidden italic">الكلمتان غير متطابقتين!</p>
+                    </div>
+                    <button id="signupBtn" class="btn-action">
+    <span id="btnText">تأكيد الانضمام</span>
+    <span id="loader" class="loader hidden"></span>
+</button>
+<div class="mt-4">
+    <button type="button" onclick="handleGoogleLogin()" 
+        class="w-full bg-white border-2 border-gray-200 text-black py-3 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-50 transition">
+
+        <img src="https://developers.google.com/identity/images/g-logo.png" class="w-5">
+        التسجيل باستخدام Google
+    </button>
+</div>
+                </form>
+                <p class="text-center mt-10 text-sm font-bold text-gray-400">عندك حساب؟ <span onclick="switchAuth('login')" class="text-black cursor-pointer underline underline-offset-8">سجل دخولك</span></p>
+            </div>
+        </div>
+    </div>
+    <div id="resetPasswordModal" class="modal">
+    <div class="modal-content">
+        <button onclick="toggleModal('resetPasswordModal')" class="absolute top-8 left-8 text-2xl text-gray-300 hover:text-black transition-all">✕</button>
+        
+        <div class="text-center mb-10">
+            <h2 class="text-4xl font-black mb-3 uppercase tracking-tighter">إعادة تعيين كلمة المرور</h2>
+            <p class="text-gray-400 text-sm font-bold">اكتب بريدك الإلكتروني لإرسال رابط تغيير كلمة مرورك</p>
+        </div>
+
+        <div class="mb-6">
+            <label class="text-[12px] font-black uppercase mb-1 block mr-1">البريد الإلكتروني</label>
+            <input type="email" id="resetEmailInput" placeholder="name@example.com">
+        </div>
+
+        <button id="resetBtn" onclick="submitPasswordReset()" class="btn-action">
+    <span id="resetText">إرسال رابط التعيين</span>
+    <span id="resetLoader" class="loader hidden"></span>
+</button>
+    </div>
+</div>
+    <header class="hero-section text-center relative overflow-hidden">
+
+    <div class="absolute inset-0 overflow-hidden z-0">
+        <div class="blur-circle circle-1"></div>
+        <div class="blur-circle circle-2"></div>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+    <div onclick="scrollToContent()" class="season-badge bg-white text-black px-6 py-2.5 rounded-full text-[15px] font-black mb-12 inline-block">
+        موسم جديد 2026
+        <div class="arrow-circle">↓</div>
+    </div>
+    
+    <h1 class="text-6xl md:text-8xl font-black mb-8 text-gray-900 tracking-tighter">
+        <span class="block">ستايلك.. واجهتك</span>
+        <span class="block text-gray-300 mt-4">في كل مكان</span>
+    </h1>
+    </div>
+            <p class="text-gray-400 text-lg md:text-xl mb-12 max-w-xl mx-auto font-medium">في "نيش" بنهتم بالتفاصيل اللي بتخليك مختلف. أحذية وملابس بجودة عالمية وتصاميم مصرية أصلية.</p>
+            <button class="relative bg-black text-white px-14 py-5 rounded-2xl font-black text-lg shadow-xl overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+    
+    <span class="absolute top-0 bottom-0 left-[-100%] w-[150%] bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-30deg] transition-all duration-[800ms] cubic-bezier(0.19, 1, 0.22, 1) group-hover:left-[100%]"></span>
+    
+    ابدأ التسوق
+</button>
+        </div>
+    </header>
+
+    <main class="container mx-auto py-24 px-6">
+        <div class="flex items-center gap-6 mb-16">
+            <h2 class="text-4xl font-black italic tracking-tighter border-r-8 border-black pr-4">أحدث القطع</h2>
+            <div class="h-[2px] flex-grow bg-gray-100"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            <div class="product-card">
+                <div class="image-holder group">
+                    <span class="absolute top-5 right-5 bg-white text-black px-4 py-1.5 rounded-full text-[11px] font-black shadow-lg">جديد</span>
+                    <div class="text-gray-200 font-black text-5xl opacity-30 group-hover:scale-110 transition-transform duration-700 uppercase">Shoe_01</div>
+                </div>
+                <div class="mt-8 text-right">
+                    <h3 class="text-2xl font-black text-gray-900">نايك Air Max 2026</h3>
+                    <p class="text-gray-400 font-bold mt-1 italic text-sm">مريح جداً للمشي والجري</p>
+                    <div class="flex justify-between items-center mt-6">
+                        <span class="text-2xl font-black tracking-tighter">1,250 ج.م</span>
+                        <button class="bg-black text-white p-4 rounded-xl hover:scale-110 transition-all shadow-lg">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('main-nav');
+            window.scrollY > 50 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
+        });
+
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = (m.style.display === "flex") ? "none" : "flex";
+            document.body.style.overflow = (m.style.display === "block") ? "hidden" : "auto";
+        }
+
+        function switchAuth(type) {
+            document.getElementById('loginForm').classList.toggle('hidden', type === 'signup');
+            document.getElementById('signupForm').classList.toggle('hidden', type === 'login');
+        }
+
+        function checkStrength(pass) {
+            const bars = [document.getElementById('str-1'), document.getElementById('str-2'), document.getElementById('str-3'), document.getElementById('str-4')];
+            const text = document.getElementById('strengthText');
+            let s = 0;
+            if (pass.length > 0) {
+                if (pass.match(/[\u0600-\u06FFa-zA-Z]/)) s = 1;
+                if (s === 1 && pass.match(/[0-9]/)) s = 2;
+                if (s === 2 && (pass.includes('#') || pass.includes('@'))) s = 3;
+                if (s === 3 && pass.includes('#') && pass.includes('@')) s = 4;
+            }
+            bars.forEach(b => b.style.backgroundColor = '#f3f4f6');
+            const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'];
+            const labels = ["ضعيفة", "متوسطة", "قوية", "أمان تام"];
+            if (s > 0) {
+                for(let i=0; i<s; i++) bars[i].style.backgroundColor = colors[s-1];
+                text.innerText = labels[s-1];
+                text.style.color = colors[s-1];
+            } else {
+                text.innerText = "مستوى الأمان";
+                text.style.color = "#9ca3af";
+            }
+            checkMatch();
+        }
+
+        function checkMatch() {
+            const p = document.getElementById('regPassword').value;
+            const c = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('signupBtn');
+            const err = document.getElementById('matchError');
+            const match = (c === "" || p === c);
+            err.classList.toggle('hidden', match);
+            btn.disabled = !match || p === "";
+        }
+
+        window.onclick = (e) => { if (e.target == document.getElementById('authModal')) toggleModal('authModal'); }
+        async function handleSignup(event) {
+    event.preventDefault();
+    // 1. حط ده هنا في أول الدالة خالص
+const nameValue = document.getElementById('regName').value.trim();
+// الكود الإضافي لفحص الحروف فقط
+const namePattern = /^[\u0600-\u06FFa-zA-Z\s]+$/;
+if (!namePattern.test(nameValue)) {
+    showToast("الاسم يجب أن يحتوي على حروف فقط (بدون أرقام أو رموز) ✍️", true);
+    return;
+}
+if (nameValue.length < 10) {
+    showToast("الاسم يجب أن يكون 10 حروف على الأقل", true);
+    return; // السطر ده هو اللي بيمنع المودال إنه يقفل وبيوقف كل حاجة
+}
+// --- الجزء الجديد لفحص الإيميل ---
+const emailValue = document.getElementById('regEmail').value.trim();
+const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+if (!emailPattern.test(emailValue)) {
+    showToast("يرجى إدخال البريد الإلكتروني بشكل صحيح 📧", true);
+    return; // بيوقف العملية والمودال بيفضل مفتوح
+}
+// --------------------------------
+
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+
+    const btn = document.getElementById('signupBtn');
+    const loader = document.getElementById('loader');
+    const text = document.getElementById('btnText');
+
+    // تشغيل اللودينج
+    btn.disabled = true;
+    loader.classList.remove('hidden');
+    text.classList.add('hidden');
+
+    try {
+        const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+        await window.sendEmailVerification(userCredential.user);
+
+        showToast("تم إرسال رابط التحقق على بريدك 📩 شيّك في SPAM", false);
+        toggleModal('authModal');
+
+    } catch (error) {
+        let errorMessage = "حدث خطأ ما، حاول لاحقاً";
+        
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = "هناك حساب مسجل بالفعل بهذا الايميل";
+        } else if (error.code === 'auth/weak-password') {
+            errorMessage = "كلمة المرور ضعيفة جداً";
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = "البريد الإلكتروني غير صحيح";
+        }
+
+        showToast(errorMessage, true);
+    }
+
+    // إيقاف اللودينج
+    btn.disabled = false;
+    loader.classList.add('hidden');
+    text.classList.remove('hidden');
+}
+function scrollToContent() {
+    window.scrollBy({
+        top: 600, // المسافة اللي هينزلها لتحت (ممكن تغير الرقم ده حسب راحتك)
+        behavior: 'smooth' // السكرول يكون ناعم
+    });
+}
+function showToast(message, isError = false) {
+    const toast = document.getElementById('successToast');
+    const text = document.getElementById('toastMessage');
+    const icon = document.getElementById('toastIcon');
+
+    text.innerText = message;
+    
+    if (isError) {
+        toast.classList.add('error-status');
+        icon.innerText = '✕'; // علامة الغلط
+    } else {
+        toast.classList.remove('error-status');
+        icon.innerText = '✓'; // علامة الصح
+    }
+
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+function handleForgotPassword() {
+    toggleModal('authModal'); 
+    toggleModal('resetPasswordModal');
+}
+
+async function submitPasswordReset() {
+    const emailInput = document.getElementById('resetEmailInput');
+    if (!emailInput) return;
+
+    const email = emailInput.value.trim();
+
+    // عناصر الزرار
+    const btn = document.getElementById('resetBtn');
+    const loader = document.getElementById('resetLoader');
+    const text = document.getElementById('resetText');
+
+    if (!email) {
+        showToast("من فضلك اكتب البريد الإلكتروني أولاً", true);
+        return;
+    }
+
+    // --- تشغيل اللودينج ---
+    btn.disabled = true;
+    loader.classList.remove('hidden');
+    text.classList.add('hidden');
+
+    try {
+        await window.sendPasswordResetEmail(window.auth, email);
+        showToast("تم إرسال رابط التغيير لبريدك بنجاح 📩", false);
+        toggleModal('resetPasswordModal');
+    } catch (error) {
+        let msg = "الإيميل غير مسجل أو هناك خطأ";
+        if (error.code === 'auth/invalid-email') msg = "البريد الإلكتروني غير صحيح";
+        showToast(msg, true);
+    } finally {
+        // --- إيقاف اللودينج في كل الحالات (سواء نجح أو فشل) ---
+        btn.disabled = false;
+        loader.classList.add('hidden');
+        text.classList.remove('hidden');
+    }
+}
+async function handleLogin(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+
+    const btn = document.getElementById('loginBtn');
+    const loader = document.getElementById('loginLoader');
+    const text = document.getElementById('loginText');
+
+    if (!email) {
+        showToast("اكتب البريد الأول", true);
+        return;
+    }
+
+    if (!password) {
+        showToast("اكتب كلمة المرور", true);
+        return;
+    }
+
+    btn.disabled = true;
+    loader.classList.remove('hidden');
+    text.classList.add('hidden');
+
+    try {
+        const userCredential = await window.signInWithEmailAndPassword(window.auth, email, password);
+
+// 🔥 أهم جزء
+if (!userCredential.user.emailVerified) {
+    showToast("يرجي تفعيل حسابك أولًا📩", true);
+    await window.auth.signOut();
+    return;
+}
+showToast("تم تسجيل الدخول بنجاح 🎉", false);
+toggleModal('authModal');
+// بعد نجاح تسجيل الدخول
+window.location.href = "dashboard.html";
+    } catch (error) {
+        let msg = "يرجي التأكد من صحة البيانات";
+
+        if (error.code === 'auth/user-not-found') {
+            msg = "البريد غير موجود";
+        } else if (error.code === 'auth/wrong-password') {
+            msg = "كلمة المرور غلط";
+        } else if (error.code === 'auth/invalid-email') {
+            msg = "البريد غير صالح";
+        }
+
+        showToast(msg, true);
+    }
+
+    btn.disabled = false;
+    loader.classList.add('hidden');
+    text.classList.remove('hidden');
+}
+async function handleGoogleLogin() {
+    try {
+        const provider = new window.GoogleAuthProvider();
+
+        const result = await window.signInWithPopup(window.auth, provider);
+
+        showToast("تم تسجيل الدخول بجوجل 🎉", false);
+        toggleModal('authModal');
+        window.location.href = "dashboard.html";
+
+    } catch (error) {
+        console.error("Google Error:", error);
+
+        // ❌ تجاهل الأخطاء الطبيعية
+        if (error.code === 'auth/popup-closed-by-user') return;
+        if (error.code === 'auth/cancelled-popup-request') return;
+
+        // ✅ بس هنا نعرض error حقيقي
+        showToast(error.message, true);
+    }
+}
+    </script>
+    <div id="successToast" class="success-toast">
+    <div id="toastIcon" class="check-icon">✓</div>
+    <span id="toastMessage" class="toast-text"></span>
+</div>
+<script type="module" src="./src/main.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<footer class="bg-black text-white pt-20 pb-10">
+    <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="text-3xl font-black text-white tracking-tighter mb-6 block">NICHE</a>
+                <p class="text-gray-400 leading-relaxed font-medium text-sm">
+                    وجهتك الأولى للأناقة والتميز. نقدم لك تشكيلة مختارة بعناية من أفضل الأحذية والملابس التي تجمع بين الجودة العالمية والتصميم العصري.
+                </p>
+            </div>
+
+            <div>
+                <h4 class="font-black text-lg mb-6 text-white">روابط هامة</h4>
+                <ul class="space-y-4 text-gray-400 font-bold text-sm">
+                    <li><a href="#" class="hover:text-white transition-colors">الرئيسية</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">أحدث المنتجات</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">سياسة الاستبدال</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">الأسئلة الشائعة</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-black text-lg mb-6 text-white">تواصل معنا</h4>
+                <ul class="space-y-4 text-gray-400 font-bold text-sm">
+                    <li class="flex items-center gap-3"><i class="fas fa-map-marker-alt text-gray-300"></i> الدقهلية، مصر</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-phone-alt text-gray-300"></i> +201508791191</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-envelope text-gray-300"></i> niche.store.support.for.help@gmail.com
+</li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="font-black text-lg mb-6 text-white">خليك معانا</h4>
+                <p class="text-gray-500 text-xs mb-6 font-bold">انضم إلينا الآن لتصلك أحدث العروض والخصومات الحصرية</p>
+                
+                <button onclick="toggleModal('authModal'); switchAuth('signup');" 
+                        class="w-full bg-white text-black py-4 px-6 rounded-xl text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg">
+                    <span>انضم إلينا الآن</span>
+                    <i class="fas fa-user-plus text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-500 text-xs font-bold">
+                © 2026 متجر نيتش. جميع الحقوق محفوظة.
+            </p>
+            
+            <div class="flex gap-6 grayscale opacity-60 hover:opacity-100 transition-all">
+                <i class="fab fa-cc-visa text-2xl"></i>
+                <i class="fab fa-cc-mastercard text-2xl"></i>
+                <i class="fas fa-money-bill-wave text-xl"></i>
+            </div>
+
+            <div class="flex gap-4">
+                <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-blue-600 hover:text-white transition-all text-lg">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 hover:text-white transition-all text-lg">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-black hover:text-white transition-all text-lg">
+        <i class="fab fa-tiktok"></i>
+    </a>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تواصل معنا | متجر نيتش</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #fdfdfd; scroll-behavior: smooth; overflow-x: hidden; color: #1a1a1a; }
+        .nav-wrapper {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 1100px; z-index: 1000;
+            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px);
+            border-radius: 25px; padding: 15px 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transition: all 0.5s cubic-bezier(0.23,1,0.32,1);
+        }
+        .nav-wrapper.scrolled { top: 0; width: 100%; max-width: 100%; border-radius: 0; padding: 10px 60px; background: #000; }
+        .nav-link { position: relative; font-weight: 600; color: #ffffff; padding: 5px 0; transition: 0.3s; opacity: 0.8; }
+        .nav-link:hover { opacity: 1; }
+        .nav-link::after {
+            content: ""; position: absolute; bottom: -2px; left: 50%;
+            width: 0; height: 2px; background: #ffffff;
+            transition: all 0.3s ease; transform: translateX(-50%);
+        }
+        .nav-link:hover::after { width: 100%; }
+        .logo {
+            position: relative; font-size: 28px; font-weight: 900;
+            color: white; text-decoration: none; letter-spacing: -1px;
+            display: inline-block; transition: all 0.3s ease;
+        }
+        .logo::after {
+            content: ""; position: absolute; bottom: -6px; left: 50%;
+            width: 0%; height: 2px; background: white;
+            transform: translateX(-50%); transition: width 0.3s ease;
+        }
+        .logo:hover {
+            letter-spacing: 1px;
+            text-shadow: 0 0 6px rgba(255,255,255,0.6), 0 0 12px rgba(255,255,255,0.4), 0 0 20px rgba(255,255,255,0.2);
+        }
+        .logo:hover::after { width: 100%; }
+        .hero-section {
+            background: radial-gradient(circle at 10% 20%, #f9f9f9 0%, #ffffff 100%);
+            padding: 220px 20px 100px; position: relative; overflow: hidden;
+        }
+        .blur-circle {
+            position: absolute; width: 400px; height: 400px; border-radius: 50%;
+            filter: blur(120px); opacity: 0.8; animation: floatRandom 18s ease-in-out infinite;
+        }
+        .circle-1 { background: #000; top: 10%; right: 10%; animation-delay: 0s; animation-duration: 10s; }
+        .circle-2 { background: #999; bottom: 10%; left: 10%; animation-delay: 4s; animation-duration: 15s; }
+        @keyframes floatRandom {
+            0% { transform: translate(0,0) scale(1); }
+            20% { transform: translate(60px,-40px) scale(1.05); }
+            40% { transform: translate(-50px,60px) scale(0.95); }
+            60% { transform: translate(40px,30px) scale(1.02); }
+            80% { transform: translate(-30px,-50px) scale(0.98); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+        .contact-card {
+            background: white; border-radius: 35px; padding: 35px;
+            transition: all 0.5s ease; border: 1px solid #f1f1f1;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        }
+        .contact-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.12);
+            border-color: #000;
+        }
+        .contact-card-icon { font-size: 3rem; margin-bottom: 20px; }
+        input, textarea {
+            width: 100%; padding: 16px 22px; background: #f8f9fa !important;
+            border: 2px solid transparent !important; border-radius: 18px;
+            outline: none; transition: 0.3s; font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+        }
+        input:focus, textarea:focus {
+            border-color: #000 !important; background: #fff !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+        }
+        .input-error {
+            border-color: #ef4444 !important;
+            background: #fff5f5 !important;
+        }
+        .field-error {
+            color: #ef4444;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-top: 10px;
+            display: none;
+            line-height: 1.3;
+        }
+        .field-error.visible { display: block; }
+        textarea { resize: vertical; min-height: 140px; }
+        .btn-action {
+            background: #000; color: #fff; width: 100%; padding: 18px;
+            border-radius: 18px; font-weight: 900; font-size: 16px;
+            transition: all 0.3s; display: flex; align-items: center;
+            justify-content: center; gap: 8px; cursor: pointer; border: none;
+        }
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); background: #111; }
+        .btn-action:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
+        .loader {
+            width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.2);
+            border-top: 3px solid #fff; border-radius: 50%; animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .success-toast {
+            position: fixed; top: -100px; left: 50%;
+            transform: translateX(-50%); background: white; padding: 15px 30px;
+            border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 15px; z-index: 3000;
+            transition: all 0.5s cubic-bezier(0.68,-0.55,0.265,1.55);
+        }
+        .success-toast.show { top: 40px; }
+        .check-icon {
+            width: 28px; height: 28px; background: #10b981;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 16px; font-weight: bold;
+        }
+        .success-toast.error-status .check-icon { background: #ef4444; }
+        .toast-text { font-weight: 700; color: #1a1a1a; font-size: 15px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 24px; }
+    </style>
+</head>
+<body>
+    <nav id="main-nav" class="nav-wrapper flex justify-between items-center">
+        <a href="index.html" class="logo">NICHE</a>
+        <ul class="hidden md:flex gap-10">
+            <li><a href="index.html" class="nav-link">الرئيسية</a></li>
+            <li><a href="shoes.html" class="nav-link">الأحذية</a></li>
+            <li><a href="clothes.html" class="nav-link">الملابس</a></li>
+            <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
+        </ul>
+        <div class="flex items-center gap-6">
+            <div class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2">
+                <span class="text-xs font-bold hidden md:block">حسابي</span>
+                <span class="text-2xl" style="filter: brightness(0) invert(1);">👤</span>
+            </div>
+            <div class="relative cursor-pointer hover:scale-110 transition">
+                <span class="text-2xl">🛒</span>
+                <span class="absolute -top-2 -right-2 bg-white text-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section text-center relative overflow-hidden min-h-[600px] flex items-center justify-center">
+        <div class="absolute inset-0 overflow-hidden z-0">
+            <div class="blur-circle circle-1"></div>
+            <div class="blur-circle circle-2"></div>
+        </div>
+        <div class="relative z-10 max-w-4xl mx-auto">
+            <span class="inline-flex items-center gap-3 bg-white text-black px-6 py-3 rounded-full font-black shadow-xl mb-8">
+                <span>💬</span> نحن هنا لمساعدتك
+            </span>
+            <h1 class="text-6xl md:text-8xl font-black mb-8 text-gray-900 tracking-tighter">
+                تواصل معنا
+            </h1>
+            <p class="text-gray-500 text-lg md:text-xl mb-12 max-w-xl mx-auto font-medium">
+                لديك سؤال أو تريد معرفة المزيد عن منتجاتنا؟ نحن دائماً هنا للإجابة على جميع استفساراتك.
+            </p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-24">
+        <div class="grid lg:grid-cols-3 gap-12 mb-20">
+            <div class="contact-card">
+                <div class="contact-card-icon">📞</div>
+                <h3 class="text-2xl font-black mb-4">رقم الهاتف</h3>
+                <p class="text-gray-500 font-medium mb-6">اتصل بنا مباشرة للحصول على إجابات سريعة</p>
+                <a href="tel:+201508791191" class="text-2xl font-black text-black hover:scale-105 transition-transform inline-block">
+                    +201508791191
+                </a>
+                <p class="text-sm text-gray-400 font-bold mt-4">متاح من 9 صباحاً إلى 6 مساءً</p>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-card-icon">📧</div>
+                <h3 class="text-2xl font-black mb-4">البريد الإلكتروني</h3>
+                <p class="text-gray-500 font-medium mb-6">أرسل لنا رسالة وسنرد عليك في أسرع وقت</p>
+                <a href="mailto:niche.store.support.for.help@gmail.com" class="text-lg font-black text-black hover:scale-105 transition-transform inline-block break-all">
+                    niche.store.support<br>.for.help@gmail.com
+                </a>
+                <p class="text-sm text-gray-400 font-bold mt-4">الرد خلال 24 ساعة</p>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-card-icon">📍</div>
+                <h3 class="text-2xl font-black mb-4">الموقع</h3>
+                <p class="text-gray-500 font-medium mb-6">زرنا في المقر الرئيسي لنا</p>
+                <p class="text-2xl font-black text-black mb-4">الدقهلية، مصر</p>
+                <p class="text-sm text-gray-400 font-bold">مفتوح طول الأسبوع</p>
+            </div>
+        </div>
+
+        <section class="max-w-2xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-black mb-6">أرسل لنا رسالتك</h2>
+                <p class="text-gray-500 text-lg font-medium">
+                    نحن نهتم برأيك ومقترحاتك. استخدم النموذج أدناه للتواصل معنا مباشرة.
+                </p>
+            </div>
+
+            <form id="contactForm" novalidate class="bg-white rounded-[40px] p-10 shadow-xl border border-gray-100">
+                <div class="mb-6">
+                    <label class="text-[12px] font-black uppercase mb-3 block mr-1">الاسم الكامل</label>
+                    <input type="text" id="contactName" placeholder="اكتب اسمك هنا" required minlength="10">
+                    <p id="contactNameError" class="field-error"></p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="text-[12px] font-black uppercase mb-3 block mr-1">البريد الإلكتروني</label>
+                    <input type="email" id="contactEmail" placeholder="your@email.com" required>
+                    <p id="contactEmailError" class="field-error"></p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="text-[12px] font-black uppercase mb-3 block mr-1">رقم الهاتف</label>
+                    <input type="tel" id="contactPhone" placeholder="01012345678" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" required>
+                    <p id="contactPhoneError" class="field-error"></p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="text-[12px] font-black uppercase mb-3 block mr-1">الموضوع</label>
+                    <input type="text" id="contactSubject" placeholder="ما موضوع رسالتك؟" required minlength="10">
+                    <p id="contactSubjectError" class="field-error"></p>
+                </div>
+
+                <div class="mb-8">
+                    <label class="text-[12px] font-black uppercase mb-3 block mr-1">الرسالة</label>
+                    <textarea id="contactMessage" placeholder="اكتب رسالتك هنا..." required minlength="20"></textarea>
+                    <p id="contactMessageError" class="field-error"></p>
+                </div>
+
+                <button id="submitBtn" type="submit" class="btn-action">
+                    <span id="submitText">إرسال الرسالة</span>
+                    <span id="submitLoader" class="loader hidden"></span>
+                </button>
+            </form>
+        </section>
+
+        <section class="mt-24 text-center">
+            <h3 class="text-3xl font-black mb-8">تابعنا على وسائل التواصل</h3>
+            <div class="flex gap-6 justify-center flex-wrap">
+                <a href="#" class="w-16 h-16 flex items-center justify-center rounded-full bg-black text-white hover:bg-blue-600 hover:scale-110 transition-all text-2xl shadow-lg">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="w-16 h-16 flex items-center justify-center rounded-full bg-black text-white hover:bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 hover:scale-110 transition-all text-2xl shadow-lg">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="#" class="w-16 h-16 flex items-center justify-center rounded-full bg-black text-white hover:bg-gray-700 hover:scale-110 transition-all text-2xl shadow-lg">
+                    <i class="fab fa-tiktok"></i>
+                </a>
+                <a href="tel:+201508791191" class="w-16 h-16 flex items-center justify-center rounded-full bg-black text-white hover:bg-green-600 hover:scale-110 transition-all text-2xl shadow-lg">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjH6JBRtesJH9vLuHzYTxL4iakHVazzgE",
+            authDomain: "niche-ef31e.firebaseapp.com",
+            projectId: "niche-ef31e",
+            storageBucket: "niche-ef31e.firebasestorage.app",
+            messagingSenderId: "1026946498550",
+            appId: "1:1026946498550:web:061b545a38a47e2d9cd1d7",
+            measurementId: "G-VDYZFJFDPJ"
+        };
+
+        if (!window.firebase) {
+            console.error("Firebase failed to load.");
+        } else {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        }
+
+        const db = window.firebase ? firebase.firestore() : null;
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('successToast');
+            const text = document.getElementById('toastMessage');
+            const icon = document.getElementById('toastIcon');
+
+            text.innerText = message;
+            toast.classList.toggle('error-status', isError);
+            icon.innerText = isError ? '✕' : '✓';
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function clearFieldErrors() {
+            const fields = ['contactName', 'contactEmail', 'contactPhone', 'contactSubject', 'contactMessage'];
+            fields.forEach(id => {
+                const input = document.getElementById(id);
+                const error = document.getElementById(`${id}Error`);
+                if (input) input.classList.remove('input-error');
+                if (error) {
+                    error.textContent = '';
+                    error.classList.remove('visible');
+                }
+            });
+        }
+
+        function setFieldError(fieldId, message) {
+            const input = document.getElementById(fieldId);
+            const error = document.getElementById(`${fieldId}Error`);
+            if (input) input.classList.add('input-error');
+            if (error) {
+                error.textContent = message;
+                error.classList.add('visible');
+            }
+        }
+
+        async function handleContactSubmit(event) {
+            event.preventDefault();
+            clearFieldErrors();
+
+            const name = document.getElementById('contactName').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+            const phone = document.getElementById('contactPhone').value.trim();
+            const subject = document.getElementById('contactSubject').value.trim();
+            const message = document.getElementById('contactMessage').value.trim();
+
+            const namePattern = /^[\u0600-\u06FFa-zA-Z\s]+$/;
+            if (!namePattern.test(name) || name.length < 10) {
+                setFieldError('contactName', 'الاسم يجب أن يكون 10 حروف أو أكثر وتحتوي فقط على أحرف.');
+                showToast("الاسم يجب أن يكون 10 حروف على الأقل.", true);
+                return;
+            }
+
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                setFieldError('contactEmail', 'Please enter a valid email address.');
+                showToast("يرجى إدخال البريد الإلكتروني بشكل صحيح 📧", true);
+                return;
+            }
+
+            const phoneDigits = phone.replace(/\D/g, '');
+            if (phoneDigits.length !== 11) {
+                setFieldError('contactPhone', 'يرجي ادخال رقم الهاتف بشكل صحيح.');
+                showToast("يرجى إدخال رقم الهاتف بشكل صحيح.", true);
+                return;
+            }
+
+            if (subject.length < 10) {
+                setFieldError('contactSubject', 'الموضوع يجب أن يكون 10 حروف أو أكثر.');
+                showToast("الموضوع يجب أن يكون 10 حروف على الأقل.", true);
+                return;
+            }
+
+            if (message.length < 20) {
+                setFieldError('contactMessage', 'الرسالة يجب أن تكون 20 حرف أو أكثر.');
+                showToast("الرسالة يجب أن تكون 20 حرف على الأقل.", true);
+                return;
+            }
+
+            if (!db) {
+                showToast("خطأ في الاتصال بـ Firebase، تأكد من تحميل المكتبات", true);
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            const loader = document.getElementById('submitLoader');
+            const text = document.getElementById('submitText');
+
+            btn.disabled = true;
+            loader.classList.remove('hidden');
+            text.classList.add('hidden');
+
+            try {
+                await db.collection("messages").add({
+                    name,
+                    email,
+                    phone: phoneDigits,
+                    subject,
+                    message,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast("شكراً لك! تم استلام رسالتك وسنرد عليك قريباً 🚀", false);
+                document.getElementById('contactForm').reset();
+            } catch (error) {
+                console.error("Firestore error:", error);
+                showToast("عذراً، حدث خطأ أثناء الإرسال. حاول مرة أخرى.", true);
+            } finally {
+                btn.disabled = false;
+                loader.classList.add('hidden');
+                text.classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('contactForm').addEventListener('submit', handleContactSubmit);
+
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('main-nav');
+            if (nav) {
+                window.scrollY > 50 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
+            }
+        });
+    </script>
+
+    <div id="successToast" class="success-toast">
+        <div id="toastIcon" class="check-icon">✓</div>
+        <span id="toastMessage" class="toast-text"></span>
+    </div>
+
+    <footer class="bg-black text-white pt-20 pb-10">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                <div class="col-span-1 md:col-span-1">
+                    <a href="#" class="text-3xl font-black text-white tracking-tighter mb-6 block">NICHE</a>
+                    <p class="text-gray-400 leading-relaxed font-medium text-sm">
+                        وجهتك الأولى للأناقة والتميز. نقدم لك تشكيلة مختارة بعناية من أفضل الأحذية والملابس التي تجمع بين الجودة العالمية والتصميم العصري.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-black text-lg mb-6 text-white">روابط هامة</h4>
+                    <ul class="space-y-4 text-gray-400 font-bold text-sm">
+                        <li><a href="index.html" class="hover:text-white transition-colors">الرئيسية</a></li>
+                        <li><a href="shoes.html" class="hover:text-white transition-colors">الأحذية</a></li>
+                        <li><a href="clothes.html" class="hover:text-white transition-colors">الملابس</a></li>
+                        <li><a href="contact.html" class="hover:text-white transition-colors">تواصل معنا</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-black text-lg mb-6 text-white">تواصل معنا</h4>
+                    <ul class="space-y-4 text-gray-400 font-bold text-sm">
+                        <li class="flex items-center gap-3"><i class="fas fa-map-marker-alt text-gray-300"></i> الدقهلية، مصر</li>
+                        <li class="flex items-center gap-3"><i class="fas fa-phone-alt text-gray-300"></i> +201508791191</li>
+                        <li class="flex items-center gap-3"><i class="fas fa-envelope text-gray-300"></i> niche.store.support.for.help@gmail.com</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-black text-lg mb-6 text-white">خليك معانا</h4>
+                    <p class="text-gray-500 text-xs mb-6 font-bold">انضم إلينا الآن لتصلك أحدث العروض والخصومات الحصرية</p>
+                    <a href="index.html" 
+                        class="w-full bg-white text-black py-4 px-6 rounded-xl text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg">
+                        <span>انضم إلينا الآن</span>
+                        <i class="fas fa-user-plus text-xs"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-500 text-xs font-bold">
+                    © 2026 متجر نيتش. جميع الحقوق محفوظة.
+                </p>
+                <div class="flex gap-6 grayscale opacity-60 hover:opacity-100 transition-all">
+                    <i class="fab fa-cc-visa text-2xl"></i>
+                    <i class="fab fa-cc-mastercard text-2xl"></i>
+                    <i class="fas fa-money-bill-wave text-xl"></i>
+                </div>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-blue-600 hover:text-white transition-all text-lg">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 hover:text-white transition-all text-lg">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-black hover:text-white transition-all text-lg">
+                        <i class="fab fa-tiktok"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
