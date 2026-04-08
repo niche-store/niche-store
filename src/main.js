@@ -10,7 +10,9 @@ import {
   signInWithPopup,
   updateProfile,
   updatePassword,
-  deleteUser
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAjH6JBRtesJH9vLuHzYTxL4iakHVazzgE",
@@ -36,4 +38,6 @@ window.GoogleAuthProvider = GoogleAuthProvider;
 window.signInWithPopup = signInWithPopup;
 window.updateProfile = updateProfile;
 window.updatePassword = updatePassword;
+window.EmailAuthProvider = EmailAuthProvider;
+window.reauthenticateWithCredential = reauthenticateWithCredential;
 console.log("Firebase شغال 🔥");

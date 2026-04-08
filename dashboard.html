@@ -204,7 +204,7 @@
 
         .gender-options {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 12px;
         }
         .gender-chip {
@@ -387,12 +387,22 @@
                                     <div class="gender-options">
                                         <button type="button" class="gender-chip" data-gender="male" onclick="selectGender('male')">ذكر</button>
                                         <button type="button" class="gender-chip" data-gender="female" onclick="selectGender('female')">أنثى</button>
-                                        <button type="button" class="gender-chip" data-gender="other" onclick="selectGender('other')">غير محدد</button>
                                     </div>
                                 </div>
                                 <div>
+                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">كلمة المرور الحالية</label>
+                                    <input type="password" id="settingsCurrentPassword" placeholder="••••••••">
+                                </div>
+                                <div>
                                     <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">كلمة المرور الجديدة</label>
-                                    <input type="password" id="settingsNewPassword" placeholder="••••••••">
+                                    <input type="password" id="settingsNewPassword" oninput="checkPasswordStrength(this.value)" placeholder="••••••••">
+                                    <div class="flex gap-1.5 mt-4 px-1">
+                                        <div id="pwd-str-1" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                                        <div id="pwd-str-2" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                                        <div id="pwd-str-3" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                                        <div id="pwd-str-4" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                                    </div>
+                                    <p id="pwd-strengthText" class="text-[10px] font-bold mt-2 mr-1 text-gray-400">مستوى الأمان</p>
                                 </div>
                                 <div>
                                     <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">تأكيد كلمة المرور</label>
@@ -684,7 +694,6 @@
             if (window.auth) {
                 await window.auth.signOut();
             }
-            localStorage.clear();
             window.location.href = 'index.html';
         };
 
@@ -724,6 +733,29 @@
             localStorage.setItem('nicheAccountMeta_' + uid, JSON.stringify(meta));
         }
 
+        function checkPasswordStrength(pass) {
+            const bars = [document.getElementById('pwd-str-1'), document.getElementById('pwd-str-2'), document.getElementById('pwd-str-3'), document.getElementById('pwd-str-4')];
+            const text = document.getElementById('pwd-strengthText');
+            let s = 0;
+            if (pass.length > 0) {
+                if (pass.match(/[\u0600-\u06FFa-zA-Z]/)) s = 1;
+                if (s === 1 && pass.match(/[0-9]/)) s = 2;
+                if (s === 2 && (pass.includes('#') || pass.includes('@'))) s = 3;
+                if (s === 3 && pass.includes('#') && pass.includes('@')) s = 4;
+            }
+            bars.forEach(b => b.style.backgroundColor = '#f3f4f6');
+            const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'];
+            const labels = ["ضعيفة", "متوسطة", "قوية", "أمان تام"];
+            if (s > 0) {
+                for(let i=0; i<s; i++) bars[i].style.backgroundColor = colors[s-1];
+                text.innerText = labels[s-1];
+                text.style.color = colors[s-1];
+            } else {
+                text.innerText = "مستوى الأمان";
+                text.style.color = "#9ca3af";
+            }
+        }
+
         function selectGender(gender) {
             document.getElementById('settingsGender').value = gender;
             document.querySelectorAll('.gender-chip').forEach(button => {
@@ -738,21 +770,29 @@
             document.getElementById('settingsEmail').value = user.email;
             document.getElementById('settingsPhone').value = meta.phone || '';
             document.getElementById('settingsGender').value = meta.gender || '';
+            document.getElementById('settingsCurrentPassword').value = '';
             document.getElementById('settingsNewPassword').value = '';
             document.getElementById('settingsConfirmPassword').value = '';
             selectGender(meta.gender || '');
+            checkPasswordStrength('');
         }
 
         async function handleAccountSettingsSave(event) {
             event.preventDefault();
 
             const name = document.getElementById('settingsName').value.trim();
+            const currentPassword = document.getElementById('settingsCurrentPassword').value.trim();
             const password = document.getElementById('settingsNewPassword').value.trim();
             const confirmPassword = document.getElementById('settingsConfirmPassword').value.trim();
             const btn = document.getElementById('settingsSaveBtn');
 
             if (!name || name.length < 3) {
                 showToast('الاسم يجب أن يكون 3 أحرف على الأقل.', true);
+                return;
+            }
+
+            if (password && !currentPassword) {
+                showToast('يرجى إدخال كلمة المرور الحالية لتغيير كلمة المرور.', true);
                 return;
             }
 
@@ -785,6 +825,16 @@
                 }
 
                 if (password) {
+                    // Reauthenticate
+                    const credential = window.EmailAuthProvider.credential(user.email, currentPassword);
+                    await window.reauthenticateWithCredential(user, credential);
+
+                    if (password === currentPassword) {
+                        showToast('كلمة المرور الجديدة هي فعليا الحالية.', true);
+                        btn.disabled = false;
+                        return;
+                    }
+
                     await window.updatePassword(user, password);
                 }
 
@@ -793,12 +843,16 @@
                 showToast('تم حفظ إعدادات الحساب بنجاح.', false);
                 document.getElementById('profileName').textContent = name;
                 document.getElementById('userGreeting').textContent = name;
+                document.getElementById('settingsCurrentPassword').value = '';
+                document.getElementById('settingsNewPassword').value = '';
+                document.getElementById('settingsConfirmPassword').value = '';
+                checkPasswordStrength('');
             } catch (error) {
                 console.error('Account settings error:', error);
                 let msg = 'حدث خطأ أثناء حفظ الإعدادات.';
-                if (error.code === 'auth/requires-recent-login') msg = 'يرجى تسجيل الدخول مرة أخرى لتغيير كلمة المرور.';
+                if (error.code === 'auth/wrong-password') msg = 'كلمة المرور الحالية غير صحيحة.';
+                else if (error.code === 'auth/requires-recent-login') msg = 'يرجى تسجيل الدخول مرة أخرى لتغيير كلمة المرور.';
                 else if (error.code === 'auth/weak-password') msg = 'كلمة المرور ضعيفة، جرب كلمة أقوى.';
-                else if (error.message) msg = error.message;
                 showToast(msg, true);
             } finally {
                 btn.disabled = false;
