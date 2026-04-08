@@ -352,10 +352,11 @@
         تسجيل باستخدام Google
     </button>
 </div>
-    <class="text-left text-xs mt-2">
+    <div class="text-left text-xs mt-2">
   <span onclick="handleForgotPassword()" class="cursor-pointer text-gray-400 hover:text-black underline">
     هل نسيت كلمة المرور؟
   </span>
+</div>
 </form>
                 <p class="text-center mt-10 text-sm font-bold text-gray-400">جديد هنا؟ <span onclick="switchAuth('signup')" class="text-black cursor-pointer underline underline-offset-8">أنشئ حسابك الآن</span></p>
             </div>
@@ -401,6 +402,43 @@
 </div>
                 </form>
                 <p class="text-center mt-10 text-sm font-bold text-gray-400">عندك حساب؟ <span onclick="switchAuth('login')" class="text-black cursor-pointer underline underline-offset-8">سجل دخولك</span></p>
+            </div>
+            <div id="googleCompleteForm" class="hidden">
+                <div class="text-center mb-10">
+                    <h2 class="text-4xl font-black mb-3 uppercase tracking-tighter">أكمل بياناتك</h2>
+                    <p class="text-gray-400 text-sm font-bold">أضف اسمك وكلمة المرور لإنهاء التسجيل</p>
+                </div>
+                <form id="googleSignupForm" onsubmit="handleGoogleCompleteSignup(event)" novalidate>
+                    <div class="mb-4">
+                        <label class="text-[12px] font-black uppercase mb-1 block mr-1">البريد الإلكتروني</label>
+                        <input type="email" id="googleEmail" readonly class="bg-gray-100 cursor-not-allowed">
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-[12px] font-black uppercase mb-1 block mr-1">الاسم بالكامل</label>
+                        <input type="text" id="googleName" placeholder="اكتب اسمك هنا" minlength="10" maxlength="30" required>
+                    </div>
+                    <div class="mb-4 relative">
+                        <label class="text-[12px] font-black uppercase mb-1 block mr-1">كلمة المرور</label>
+                        <input type="password" id="googlePassword" oninput="checkGoogleStrength(this.value)" placeholder="••••••••" required>
+                        <div class="flex gap-1.5 mt-4 px-1">
+                            <div id="google-str-1" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                            <div id="google-str-2" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                            <div id="google-str-3" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                            <div id="google-str-4" class="h-1.5 flex-1 bg-gray-100 rounded-full transition-all"></div>
+                        </div>
+                        <p id="googleStrengthText" class="text-[10px] font-bold mt-2 mr-1 text-gray-400">مستوى الأمان</p>
+                    </div>
+                    <div class="mb-6">
+                        <label class="text-[12px] font-black uppercase mb-1 block mr-1">تأكيد كلمة المرور</label>
+                        <input type="password" id="googleConfirmPassword" oninput="checkGoogleMatch()" placeholder="••••••••" required>
+                        <p id="googleMatchError" class="text-[10px] font-bold mt-2 mr-1 text-red-500 hidden italic">الكلمتان غير متطابقتين!</p>
+                    </div>
+                    <button id="googleSignupBtn" class="btn-action">
+                        <span id="googleSignupText">أكمل التسجيل</span>
+                        <span id="googleSignupLoader" class="loader hidden"></span>
+                    </button>
+                </form>
+                <p class="text-center mt-10 text-sm font-bold text-gray-400">لديك حساب؟ <span onclick="switchAuth('login')" class="text-black cursor-pointer underline underline-offset-8">سجل دخولك</span></p>
             </div>
         </div>
     </div>
@@ -484,12 +522,23 @@
         function toggleModal(id) {
             const m = document.getElementById(id);
             m.style.display = (m.style.display === "flex") ? "none" : "flex";
-            document.body.style.overflow = (m.style.display === "block") ? "hidden" : "auto";
+            document.body.style.overflow = (m.style.display === "flex") ? "hidden" : "auto";
+        }
+
+        let currentAuthMode = 'login';
+        let currentGoogleUser = null;
+
+        function resetAuthForms() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('googleCompleteForm').classList.add('hidden');
         }
 
         function switchAuth(type) {
-            document.getElementById('loginForm').classList.toggle('hidden', type === 'signup');
-            document.getElementById('signupForm').classList.toggle('hidden', type === 'login');
+            currentAuthMode = type;
+            document.getElementById('loginForm').classList.toggle('hidden', type !== 'login');
+            document.getElementById('signupForm').classList.toggle('hidden', type !== 'signup');
+            document.getElementById('googleCompleteForm').classList.add('hidden');
         }
 
         function checkStrength(pass) {
@@ -524,6 +573,59 @@
             const match = (c === "" || p === c);
             err.classList.toggle('hidden', match);
             btn.disabled = !match || p === "";
+        }
+
+        function checkGoogleStrength(pass) {
+            const bars = [
+                document.getElementById('google-str-1'),
+                document.getElementById('google-str-2'),
+                document.getElementById('google-str-3'),
+                document.getElementById('google-str-4')
+            ];
+            const text = document.getElementById('googleStrengthText');
+            let s = 0;
+            if (pass.length > 0) {
+                if (pass.match(/[ -   a-zA-Z]/)) s = 1;
+                if (s === 1 && pass.match(/[0-9]/)) s = 2;
+                if (s === 2 && (pass.includes('#') || pass.includes('@'))) s = 3;
+                if (s === 3 && pass.includes('#') && pass.includes('@')) s = 4;
+            }
+            bars.forEach(b => b.style.backgroundColor = '#f3f4f6');
+            const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'];
+            const labels = ["ضعيفة", "متوسطة", "قوية", "أمان تام"];
+            if (s > 0) {
+                for (let i = 0; i < s; i++) bars[i].style.backgroundColor = colors[s-1];
+                text.innerText = labels[s-1];
+                text.style.color = colors[s-1];
+            } else {
+                text.innerText = "مستوى الأمان";
+                text.style.color = "#9ca3af";
+            }
+            checkGoogleMatch();
+        }
+
+        function checkGoogleMatch() {
+            const p = document.getElementById('googlePassword').value;
+            const c = document.getElementById('googleConfirmPassword').value;
+            const btn = document.getElementById('googleSignupBtn');
+            const err = document.getElementById('googleMatchError');
+            const match = (c === "" || p === c);
+            err.classList.toggle('hidden', match);
+            btn.disabled = !match || p === "";
+        }
+
+        function showGoogleSignupForm(user) {
+            resetAuthForms();
+            document.getElementById('googleCompleteForm').classList.remove('hidden');
+            document.getElementById('googleEmail').value = user.email || '';
+            document.getElementById('googleName').value = user.displayName || '';
+            document.getElementById('googlePassword').value = '';
+            document.getElementById('googleConfirmPassword').value = '';
+            document.getElementById('googleMatchError').classList.add('hidden');
+            document.getElementById('googleSignupBtn').disabled = true;
+            document.getElementById('googleSignupText').classList.remove('hidden');
+            document.getElementById('googleSignupLoader').classList.add('hidden');
+            checkGoogleStrength('');
         }
 
         window.onclick = (e) => { if (e.target == document.getElementById('authModal')) toggleModal('authModal'); }
@@ -714,22 +816,95 @@ window.location.href = "dashboard.html";
 async function handleGoogleLogin() {
     try {
         const provider = new window.GoogleAuthProvider();
-
         const result = await window.signInWithPopup(window.auth, provider);
+        const isNewUser = result?.additionalUserInfo?.isNewUser;
+        const user = result.user;
 
-        showToast("تم تسجيل الدخول بجوجل 🎉", false);
-        toggleModal('authModal');
-        window.location.href = "dashboard.html";
+        if (currentAuthMode === 'login') {
+            if (isNewUser) {
+                await window.deleteUser(user);
+                await window.auth.signOut();
+                showToast('هذا المستخدم غير موجود. الرجاء التسجيل أولاً.', true);
+                return;
+            }
 
+            showToast('تم تسجيل الدخول بجوجل 🎉', false);
+            toggleModal('authModal');
+            window.location.href = 'dashboard.html';
+            return;
+        }
+
+        if (!isNewUser) {
+            await window.auth.signOut();
+            showToast('هذا الحساب موجود بالفعل. الرجاء تسجيل الدخول.', true);
+            switchAuth('login');
+            return;
+        }
+
+        currentGoogleUser = user;
+        showGoogleSignupForm(user);
     } catch (error) {
-        console.error("Google Error:", error);
+        console.error('Google Error:', error);
 
-        // ❌ تجاهل الأخطاء الطبيعية
         if (error.code === 'auth/popup-closed-by-user') return;
         if (error.code === 'auth/cancelled-popup-request') return;
 
-        // ✅ بس هنا نعرض error حقيقي
         showToast(error.message, true);
+    }
+}
+
+async function handleGoogleCompleteSignup(event) {
+    event.preventDefault();
+
+    if (!currentGoogleUser) {
+        showToast('لم يتم إنشاء حساب Google بعد. حاول مجدداً.', true);
+        return;
+    }
+
+    const nameValue = document.getElementById('googleName').value.trim();
+    const password = document.getElementById('googlePassword').value.trim();
+    const confirmPassword = document.getElementById('googleConfirmPassword').value.trim();
+
+    const namePattern = /^[\u0600-\u06FFa-zA-Z\s]+$/;
+    if (!namePattern.test(nameValue) || nameValue.length < 10) {
+        showToast('الاسم يجب أن يحتوي على حروف فقط وأن يكون 10 حروف على الأقل.', true);
+        return;
+    }
+
+    if (password.length < 8) {
+        showToast('كلمة المرور يجب أن تكون 8 أحرف فأكثر.', true);
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showToast('كلمتا المرور غير متطابقتين.', true);
+        return;
+    }
+
+    const btn = document.getElementById('googleSignupBtn');
+    const loader = document.getElementById('googleSignupLoader');
+    const text = document.getElementById('googleSignupText');
+
+    btn.disabled = true;
+    loader.classList.remove('hidden');
+    text.classList.add('hidden');
+
+    try {
+        await window.updateProfile(currentGoogleUser, { displayName: nameValue });
+        await window.updatePassword(currentGoogleUser, password);
+        await window.sendEmailVerification(currentGoogleUser);
+
+        showToast('تم إكمال التسجيل. يرجى تأكيد بريدك الإلكتروني قبل الدخول.', false);
+        await window.auth.signOut();
+        toggleModal('authModal');
+        switchAuth('login');
+    } catch (error) {
+        console.error('Google completion error:', error);
+        showToast('فشل إكمال التسجيل. حاول مرة أخرى.', true);
+    } finally {
+        btn.disabled = false;
+        loader.classList.add('hidden');
+        text.classList.remove('hidden');
     }
 }
     </script>
