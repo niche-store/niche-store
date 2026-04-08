@@ -3,13 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - متجر نيتش</title>
+    <title>لوحة حسابي - نيتش</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
-        /* --- Success Notification Style --- */
+        body { font-family: 'Cairo', sans-serif; background-color: #f8f9fa; color: #1a1a1a; }
+        
+        .nav-wrapper {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 1100px; z-index: 1000;
+            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px);
+            border-radius: 25px; padding: 15px 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .nav-wrapper.scrolled { top: 0; width: 100%; max-width: 100%; border-radius: 0; padding: 10px 60px; background: #000; }
+
+        .logo {
+            position: relative;
+            font-size: 28px;
+            font-weight: 900;
+            color: white;
+            text-decoration: none;
+            letter-spacing: -1px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .logo:hover { letter-spacing: 1px; text-shadow: 0 0 6px rgba(255,255,255,0.6), 0 0 12px rgba(255,255,255,0.4), 0 0 20px rgba(255,255,255,0.2); }
+
+        .nav-link { position: relative; font-weight: 600; color: #ffffff; padding: 5px 0; transition: 0.3s; opacity: 0.8; }
+        .nav-link:hover { opacity: 1; }
+        .nav-link::after { content: ""; position: absolute; bottom: -2px; left: 50%; width: 0; height: 2px; background: #ffffff; transition: all 0.3s ease; transform: translateX(-50%); }
+        .nav-link:hover::after { width: 100%; }
+
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 2000; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.7); 
+            backdrop-filter: blur(8px); 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .modal-content {
+            background: white; 
+            padding: 45px;
+            width: 90%; 
+            max-width: 480px; 
+            border-radius: 40px;
+            position: relative; 
+            animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.3);
+        }
+        @keyframes popUp { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        input {
+            width: 100%; padding: 16px 22px; 
+            background: #f8f9fa !important; border: 2px solid transparent !important;
+            border-radius: 18px; outline: none; transition: 0.3s; font-weight: 600;
+        }
+        input:focus { border-color: #000 !important; background: #fff !important; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+
+        .btn-action {
+            background: #000; color: #fff; width: 100%; padding: 18px;
+            border-radius: 18px; font-weight: 900; font-size: 18px;
+            transition: all 0.3s; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer;
+        }
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); background: #111; }
+        .btn-action:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
+
         .success-toast {
             position: fixed;
             top: -100px;
@@ -43,13 +111,13 @@
             animation: scaleIn 0.5s ease forwards;
         }
 
-        .success-toast.error-status .check-icon {
-            background: #ef4444;
-        }
-
         @keyframes scaleIn {
             0% { transform: scale(0); }
             100% { transform: scale(1); }
+        }
+
+        .success-toast.error-status .check-icon {
+            background: #ef4444;
         }
 
         .toast-text {
@@ -58,310 +126,55 @@
             font-size: 15px;
         }
 
-        body { 
-            font-family: 'Cairo', sans-serif; 
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%); 
-            scroll-behavior: smooth; 
-            overflow-x: hidden; 
-            color: #ffffff; 
-            min-height: 100vh;
-        }
-
-        /* --- القائمة العائمة --- */
-        .nav-wrapper {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 1100px; z-index: 1000;
-            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px);
-            border-radius: 25px; padding: 15px 35px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        .nav-wrapper.scrolled { top: 0; width: 100%; max-width: 100%; border-radius: 0; padding: 10px 60px; background: #000; }
-
-        .nav-link { position: relative; font-weight: 600; color: #ffffff; padding: 5px 0; transition: 0.3s; opacity: 0.8; }
-        .nav-link:hover { opacity: 1; }
-        .nav-link::after {
-            content: ""; position: absolute; bottom: -2px; left: 50%;
-            width: 0; height: 2px; background: #ffffff;
-            transition: all 0.3s ease; transform: translateX(-50%);
-        }
-        .nav-link:hover::after { width: 100%; }
-
-        .logo {
+        .loader {
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
             position: relative;
-            font-size: 28px;
-            font-weight: 900;
-            color: white;
-            text-decoration: none;
-            letter-spacing: -1px;
-            display: inline-block;
-            transition: all 0.3s ease;
         }
 
-        .logo::after {
+        .loader::after {
             content: "";
             position: absolute;
-            bottom: -6px;
-            left: 50%;
-            width: 0%;
-            height: 2px;
-            background: white;
-            transform: translateX(-50%);
-            transition: width 0.3s ease;
+            inset: -6px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.1);
         }
 
-        .logo:hover {
-            letter-spacing: 1px;
-            text-shadow: 
-                0 0 6px rgba(255,255,255,0.6),
-                0 0 12px rgba(255,255,255,0.4),
-                0 0 20px rgba(255,255,255,0.2);
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
+        
+        .dashboard-card {
+            background: white; border-radius: 20px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #eee;
+            transition: transform 0.3s ease;
+        }
+        .dashboard-card:hover { transform: translateY(-5px); }
 
-        .logo:hover::after {
-            width: 100%;
+        .status-badge {
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;
         }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #d1fae5; color: #065f46; }
 
-        /* --- Dashboard Hero --- */
-        .dashboard-hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 120px 20px 80px;
-            margin-top: 100px;
-            position: relative;
-            overflow: hidden;
-            text-align: center;
+        .sidebar-link {
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+            border-radius: 12px; transition: 0.3s; color: #4b5563; font-weight: 600; text-decoration: none;
         }
-
-        .dashboard-hero::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
-            animation: pulse 4s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
-
-        .welcome-text {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: #ffffff;
-            margin-bottom: 20px;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-
-        .welcome-subtitle {
-            font-size: 1.2rem;
-            color: rgba(255,255,255,0.9);
-            font-weight: 600;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .cta-button {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            color: #fff;
-            padding: 18px 40px;
-            border-radius: 50px;
-            font-weight: 900;
-            font-size: 18px;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 30px rgba(255,107,107,0.3);
-        }
-
-        .cta-button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(255,107,107,0.4);
-        }
-
-        /* --- Products Section --- */
-        .products-section {
-            padding: 80px 20px;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-        }
-
-        .section-title {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-
-        .section-title h2 {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #ffffff;
-            margin-bottom: 16px;
-            letter-spacing: -1px;
-        }
-
-        .section-title p {
-            font-size: 1.1rem;
-            color: rgba(255,255,255,0.7);
-            font-weight: 600;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .product-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 25px;
-            padding: 30px;
-            transition: all 0.5s ease;
-            border: 1px solid rgba(255,255,255,0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .product-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .product-card:hover::before {
-            left: 100%;
-        }
-
-        .product-card:hover {
-            transform: translateY(-15px);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-            border-color: rgba(255,255,255,0.4);
-        }
-
-        .product-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-
-        .product-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 10px;
-        }
-
-        .product-price {
-            font-size: 1.3rem;
-            font-weight: 900;
-            color: #ff6b6b;
-            margin-bottom: 20px;
-        }
-
-        .add-to-cart-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            width: 100%;
-            padding: 15px;
-            border-radius: 15px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .add-to-cart-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 25px rgba(102,126,234,0.3);
-        }
-
-        /* --- Featured Section --- */
-        .featured-section {
-            padding: 80px 20px;
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
-        }
-
-        .featured-card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px);
-            border-radius: 30px;
-            padding: 40px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .featured-title {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: #ffffff;
-            margin-bottom: 20px;
-        }
-
-        .featured-desc {
-            font-size: 1.1rem;
-            color: rgba(255,255,255,0.8);
-            margin-bottom: 30px;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .featured-btn {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            color: #fff;
-            padding: 16px 32px;
-            border-radius: 25px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .featured-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(255,107,107,0.3);
-        }
-
-        /* --- Footer --- */
-        footer {
-            background: #000;
-            color: #fff;
-            padding: 60px 20px 40px;
-        }
-
-        footer h4 {
-            font-weight: 900;
-            margin-bottom: 20px;
-        }
-
-        footer ul li {
-            margin-bottom: 10px;
-        }
-
-        footer a {
-            color: #ccc;
-            transition: color 0.3s;
-        }
-
-        footer a:hover {
-            color: #fff;
-        }
+        .sidebar-link.active { background: #000; color: #fff; }
+        .sidebar-link:hover:not(.active) { background: #f3f4f6; }
     </style>
 </head>
 <body>
 
     <nav id="main-nav" class="nav-wrapper flex justify-between items-center">
-        <a href="index.html" class="logo">NICHE</a>
+        <a href="index.html" class="logo">
+    NICHE
+</a>
         <ul class="hidden md:flex gap-10">
             <li><a href="index.html" class="nav-link">الرئيسية</a></li>
             <li><a href="shoes.html" class="nav-link">الأحذية</a></li>
@@ -369,60 +182,171 @@
             <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
         </ul>
         <div class="flex items-center gap-6">
-            <div class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2">
-                <span class="text-xs font-bold hidden md:block" id="userAccount">حسابي</span>
-                <span class="text-2xl" style="filter: brightness(0) invert(1);">👤</span>
-            </div>
-            <div class="relative cursor-pointer hover:scale-110 transition">
-                <span class="text-2xl">🛒</span>
-                <span id="cartCount" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">0</span>
-            </div>
-            <button onclick="handleLogout()" class="bg-red-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-600 transition">تسجيل الخروج</button>
+            <button onclick="handleLogout()" class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2 font-bold text-xs">
+                <span>خروج</span>
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
         </div>
     </nav>
 
-    <section class="dashboard-hero">
-        <div class="max-w-4xl mx-auto">
-            <h1 class="welcome-text">مرحباً بك في متجر نيتش</h1>
-            <p class="welcome-subtitle">اكتشف أحدث المنتجات والعروض الحصرية المصممة خصيصاً لك</p>
-            <button onclick="scrollToProducts()" class="cta-button">
-                <span>ابدأ التسوق الآن</span>
-                <i class="fas fa-arrow-down"></i>
-            </button>
+    <main class="max-w-7xl mx-auto px-6 pt-32 pb-20">
+        
+        <div class="mb-10 text-right">
+            <h1 class="text-3xl font-black mb-2">أهلاً بك، <span id="userGreeting" class="text-blue-600">...</span> 👋</h1>
+            <p class="text-gray-500">إليك نظرة عامة على نشاطك في متجر نيتش</p>
         </div>
-    </section>
 
-    <section id="products" class="products-section">
-        <div class="container mx-auto">
-            <div class="section-title">
-                <h2>منتجاتنا المميزة</h2>
-                <p>تشكيلة مختارة من أفضل المنتجات بجودة عالية وأسعار تنافسية</p>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <div class="lg:col-span-1 space-y-2">
+                <a href="#" class="sidebar-link active"><i class="fas fa-th-large"></i> لوحة التحكم</a>
+                <a href="shop.html" class="sidebar-link"><i class="fas fa-shopping-bag"></i> اطلب منتجات</a>
+                <a href="#" class="sidebar-link"><i class="fas fa-box"></i> طلباتي</a>
+                <a href="#" class="sidebar-link"><i class="fas fa-heart"></i> المفضلة</a>
+                <a href="#" class="sidebar-link"><i class="fas fa-user-cog"></i> إعدادات الحساب</a>
             </div>
-            <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Products will be loaded here -->
+
+            <div class="lg:col-span-3 space-y-8">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="dashboard-card flex items-center gap-5">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs font-bold">إجمالي الطلبات</p>
+                            <h3 class="text-xl font-black" id="totalOrders">0</h3>
+                        </div>
+                    </div>
+                    <div class="dashboard-card flex items-center gap-5">
+                        <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs font-bold">المحفظة</p>
+                            <h3 class="text-xl font-black">0.00 ج.م</h3>
+                        </div>
+                    </div>
+                    <div class="dashboard-card flex items-center gap-5">
+                        <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-xs font-bold">نقاط الولاء</p>
+                            <h3 class="text-xl font-black">150 نقطة</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-black">أحدث الطلبات</h2>
+                        <a href="shop.html" class="text-blue-600 text-sm font-bold hover:underline">طلب جديد +</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse">
+                            <thead>
+                                <tr class="text-gray-400 text-sm border-b">
+                                    <th class="pb-4">رقم الطلب</th>
+                                    <th class="pb-4">التاريخ</th>
+                                    <th class="pb-4">المنتج</th>
+                                    <th class="pb-4">الحالة</th>
+                                    <th class="pb-4">المجموع</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-bold" id="ordersTableBody">
+                                <tr>
+                                    <td class="py-4 text-gray-400">لا يوجد طلبات حتى الآن</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="dashboard-card">
+                        <h2 class="text-lg font-black mb-4"><i class="fas fa-user-circle ml-2"></i> معلومات الحساب</h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between border-b pb-2">
+                                <span class="text-gray-500">الاسم:</span>
+                                <span id="profileName">جاري التحميل...</span>
+                            </div>
+                            <div class="flex justify-between border-b pb-2">
+                                <span class="text-gray-500">البريد:</span>
+                                <span id="profileEmail" class="text-xs">...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h2 class="text-lg font-black mb-4"><i class="fas fa-map-marker-alt ml-2"></i> عنوان الشحن</h2>
+                        <div id="shippingAddressDisplay" class="space-y-2">
+                            <p class="text-gray-500 text-sm">لم تقم بإضافة عنوان بعد.</p>
+                            <button onclick="toggleModal('shippingModal')" class="text-blue-600 text-sm font-bold underline">إضافة عنوان</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-    </section>
+    </main>
 
-    <section class="featured-section">
-        <div class="container mx-auto">
-            <div class="featured-card">
-                <h3 class="featured-title">عروض خاصة</h3>
-                <p class="featured-desc">انضم إلى عائلتنا واحصل على خصومات تصل إلى 50% على جميع المنتجات</p>
-                <button onclick="scrollToProducts()" class="featured-btn">
-                    <span>اكتشف العروض</span>
-                    <i class="fas fa-gift"></i>
+    <!-- Shipping Address Modal -->
+    <div id="shippingModal" class="modal">
+        <div class="modal-content">
+            <button onclick="toggleModal('shippingModal')" class="absolute top-8 left-8 text-2xl text-gray-300 hover:text-black transition-all">✕</button>
+            
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-black mb-3 uppercase tracking-tighter">عنوان الشحن</h2>
+                <p class="text-gray-400 text-sm font-bold">أضف عنوان الشحن الخاص بك</p>
+            </div>
+
+            <form onsubmit="handleAddShippingAddress(event)" novalidate>
+                <div class="mb-4">
+                    <label class="text-[12px] font-black uppercase mb-1 block mr-1">المحافظة</label>
+                    <input type="text" id="shippingCity" placeholder="مثال: القاهرة" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-[12px] font-black uppercase mb-1 block mr-1">المنطقة</label>
+                    <input type="text" id="shippingDistrict" placeholder="مثال: مصر الجديدة" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-[12px] font-black uppercase mb-1 block mr-1">الشارع</label>
+                    <input type="text" id="shippingStreet" placeholder="اسم الشارع" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-[12px] font-black uppercase mb-1 block mr-1">رقم المبنى</label>
+                    <input type="text" id="shippingBuilding" placeholder="123" required>
+                </div>
+
+                <div class="mb-6">
+                    <label class="text-[12px] font-black uppercase mb-1 block mr-1">رقم الهاتف</label>
+                    <input type="tel" id="shippingPhone" placeholder="01xxxxxxxxx" required>
+                </div>
+
+                <button id="shippingBtn" class="btn-action">
+                    <span id="shippingText">حفظ العنوان</span>
+                    <span id="shippingLoader" class="loader hidden"></span>
                 </button>
-            </div>
+            </form>
         </div>
-    </section>
+    </div>
 
+    <!-- Success Toast -->
+    <div id="successToast" class="success-toast">
+        <div id="toastIcon" class="check-icon">✓</div>
+        <span id="toastMessage" class="toast-text"></span>
+    </div>
+
+    <!-- Footer -->
     <footer class="bg-black text-white pt-20 pb-10">
         <div class="container mx-auto px-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                 
                 <div class="col-span-1 md:col-span-1">
-                    <a href="#" class="text-3xl font-black text-white tracking-tighter mb-6 block">NICHE</a>
+                    <a href="index.html" class="text-3xl font-black text-white tracking-tighter mb-6 block">NICHE</a>
                     <p class="text-gray-400 leading-relaxed font-medium text-sm">
                         وجهتك الأولى للأناقة والتميز. نقدم لك تشكيلة مختارة بعناية من أفضل الأحذية والملابس التي تجمع بين الجودة العالمية والتصميم العصري.
                     </p>
@@ -451,11 +375,11 @@
                     <h4 class="font-black text-lg mb-6 text-white">خليك معانا</h4>
                     <p class="text-gray-500 text-xs mb-6 font-bold">انضم إلينا الآن لتصلك أحدث العروض والخصومات الحصرية</p>
                     
-                    <a href="index.html" 
-                        class="w-full bg-white text-black py-4 px-6 rounded-xl text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg">
-                        <span>انضم إلينا الآن</span>
-                        <i class="fas fa-user-plus text-xs"></i>
-                    </a>
+                    <button onclick="handleLogout()"
+                            class="w-full bg-white text-black py-4 px-6 rounded-xl text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg">
+                        <span>تسجيل خروج</span>
+                        <i class="fas fa-sign-out-alt text-xs"></i>
+                    </button>
                 </div>
             </div>
 
@@ -467,7 +391,7 @@
                 <div class="flex gap-6 grayscale opacity-60 hover:opacity-100 transition-all">
                     <i class="fab fa-cc-visa text-2xl"></i>
                     <i class="fab fa-cc-mastercard text-2xl"></i>
-                    <i class="fab fa-money-bill-wave text-xl"></i>
+                    <i class="fas fa-money-bill-wave text-xl"></i>
                 </div>
 
                 <div class="flex gap-4">
@@ -485,46 +409,23 @@
         </div>
     </footer>
 
-    <div id="successToast" class="success-toast">
-        <div id="toastIcon" class="check-icon">✓</div>
-        <span id="toastMessage" class="toast-text"></span>
-    </div>
-
     <script type="module" src="./src/main.js"></script>
+    
     <script>
-        // Load user name
-        window.addEventListener('load', () => {
-            if (window.auth && window.auth.currentUser) {
-                const user = window.auth.currentUser;
-                const displayName = user.displayName || user.email.split('@')[0];
-                document.getElementById('userAccount').textContent = displayName;
-            }
+        // Navigation Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('main-nav');
+            window.scrollY > 50 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
         });
 
-        // Cart functionality
-        let cartCount = parseInt(localStorage.getItem('cartCount')) || 0;
-        document.getElementById('cartCount').textContent = cartCount;
-
-        function addToCart(productId) {
-            cartCount++;
-            localStorage.setItem('cartCount', cartCount);
-            document.getElementById('cartCount').textContent = cartCount;
-            showToast('تم إضافة المنتج إلى السلة! 🛒');
+        // Modal Toggle
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = (m.style.display === "flex") ? "none" : "flex";
+            document.body.style.overflow = (m.style.display === "flex") ? "hidden" : "auto";
         }
 
-        function handleLogout() {
-            if (window.auth) {
-                window.auth.signOut().then(() => {
-                    localStorage.removeItem('cartCount');
-                    window.location.href = 'index.html';
-                });
-            }
-        }
-
-        function scrollToProducts() {
-            document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
-        }
-
+        // Show Toast Notification
         function showToast(message, isError = false) {
             const toast = document.getElementById('successToast');
             const text = document.getElementById('toastMessage');
@@ -546,35 +447,166 @@
             }, 3000);
         }
 
-        // Load products
-        const products = [
-            { id: 1, name: 'حذاء رياضي أنيق', price: '299 ج.م', image: 'https://i.postimg.cc/5yWLkMD3/colorful-baby-clothes-stockcake.webp' },
-            { id: 2, name: 'قميص كلاسيكي', price: '199 ج.م', image: 'https://i.postimg.cc/qvFt5T36/clothes-hang-on-hangers-illustration-ai-generative-free-photo.jpg' },
-            { id: 3, name: 'جاكيت عصري', price: '499 ج.م', image: 'https://i.postimg.cc/BvDv713h/men-s-clothing-store-business-suit-on-a-mannequin-photo.jpg' },
-            { id: 4, name: 'حقيبة يد', price: '349 ج.م', image: 'https://i.postimg.cc/5yWLkMD3/colorful-baby-clothes-stockcake.webp' },
-            { id: 5, name: 'ساعة أنيقة', price: '599 ج.م', image: 'https://i.postimg.cc/qvFt5T36/clothes-hang-on-hangers-illustration-ai-generative-free-photo.jpg' },
-            { id: 6, name: 'نظارات شمسية', price: '249 ج.م', image: 'https://i.postimg.cc/BvDv713h/men-s-clothing-store-business-suit-on-a-mannequin-photo.jpg' }
-        ];
+        // Store orders in localStorage
+        function getOrders() {
+            const orders = localStorage.getItem('userOrders');
+            return orders ? JSON.parse(orders) : [
+                { id: '#8821', date: '2026-04-01', item: 'نايك Air Max', status: 'completed', price: '1,250 ج.م' },
+                { id: '#8895', date: '2026-04-07', item: 'تيشيرت بريميوم', status: 'pending', price: '350 ج.م' }
+            ];
+        }
 
-        function loadProducts() {
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = products.map(product => `
-                <div class="product-card">
-                    <img src="${product.image}" alt="${product.name}" class="product-image">
-                    <h3 class="product-title">${product.name}</h3>
-                    <p class="product-price">${product.price}</p>
-                    <button onclick="addToCart(${product.id})" class="add-to-cart-btn">أضف إلى السلة</button>
-                </div>
+        function saveOrders(orders) {
+            localStorage.setItem('userOrders', JSON.stringify(orders));
+        }
+
+        function getShippingAddress() {
+            const address = localStorage.getItem('userShippingAddress');
+            return address ? JSON.parse(address) : null;
+        }
+
+        function saveShippingAddress(address) {
+            localStorage.setItem('userShippingAddress', JSON.stringify(address));
+        }
+
+        // Load Orders Function
+        function loadUserOrders(uid) {
+            const orders = getOrders();
+            const tbody = document.getElementById('ordersTableBody');
+            document.getElementById('totalOrders').textContent = orders.length;
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td class="py-4 text-gray-400">لا يوجد طلبات حتى الآن</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr class="border-b hover:bg-gray-50 transition">
+                    <td class="py-4 text-blue-600">${order.id}</td>
+                    <td class="py-4">${order.date}</td>
+                    <td class="py-4">${order.item}</td>
+                    <td class="py-4">
+                        <span class="status-badge ${order.status === 'completed' ? 'status-completed' : 'status-pending'}">
+                            ${order.status === 'completed' ? 'تم التوصيل' : 'قيد المعالجة'}
+                        </span>
+                    </td>
+                    <td class="py-4">${order.price}</td>
+                </tr>
             `).join('');
         }
 
-        loadProducts();
+        // Load Shipping Address
+        function loadShippingAddress() {
+            const address = getShippingAddress();
+            const display = document.getElementById('shippingAddressDisplay');
+            
+            if (address) {
+                display.innerHTML = `
+                    <div class="space-y-2">
+                        <p class="text-gray-700"><strong>المحافظة:</strong> ${address.city}</p>
+                        <p class="text-gray-700"><strong>المنطقة:</strong> ${address.district}</p>
+                        <p class="text-gray-700"><strong>الشارع:</strong> ${address.street}</p>
+                        <p class="text-gray-700"><strong>رقم المبنى:</strong> ${address.building}</p>
+                        <p class="text-gray-700"><strong>الهاتف:</strong> ${address.phone}</p>
+                        <button onclick="toggleModal('shippingModal')" class="text-blue-600 text-sm font-bold underline mt-4">تعديل العنوان</button>
+                    </div>
+                `;
+            }
+        }
 
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('main-nav');
-            window.scrollY > 50 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
-        });
+        // Handle Shipping Address Form
+        async function handleAddShippingAddress(event) {
+            event.preventDefault();
+
+            const city = document.getElementById('shippingCity').value.trim();
+            const district = document.getElementById('shippingDistrict').value.trim();
+            const street = document.getElementById('shippingStreet').value.trim();
+            const building = document.getElementById('shippingBuilding').value.trim();
+            const phone = document.getElementById('shippingPhone').value.trim();
+
+            const btn = document.getElementById('shippingBtn');
+            const loader = document.getElementById('shippingLoader');
+            const text = document.getElementById('shippingText');
+
+            if (!city || !district || !street || !building || !phone) {
+                showToast("يرجى ملء جميع الحقول", true);
+                return;
+            }
+
+            btn.disabled = true;
+            loader.classList.remove('hidden');
+            text.classList.add('hidden');
+
+            try {
+                const address = { city, district, street, building, phone };
+                saveShippingAddress(address);
+                showToast("تم حفظ العنوان بنجاح ✓", false);
+                toggleModal('shippingModal');
+                loadShippingAddress();
+                
+                // Reset form
+                document.querySelector('form').reset();
+            } catch (error) {
+                showToast("حدث خطأ ما، حاول مجدداً", true);
+            }
+
+            btn.disabled = false;
+            loader.classList.add('hidden');
+            text.classList.remove('hidden');
+        }
+
+        // Logout Function
+        window.handleLogout = async () => {
+            if (window.auth) {
+                await window.auth.signOut();
+            }
+            localStorage.clear();
+            window.location.href = 'index.html';
+        };
+
+        // Firebase Auth State
+        if (window.auth) {
+            window.auth.onAuthStateChanged((user) => {
+                if (!user) {
+                    window.location.href = 'index.html';
+                } else {
+                    const userName = user.displayName || user.email.split('@')[0];
+                    document.getElementById('userGreeting').textContent = userName;
+                    document.getElementById('profileName').textContent = userName;
+                    document.getElementById('profileEmail').textContent = user.email;
+                    
+                    loadUserOrders(user.uid);
+                    loadShippingAddress();
+                }
+            });
+        } else {
+            // If Firebase not loaded yet, load default data
+            setTimeout(() => {
+                if (window.auth) {
+                    window.auth.onAuthStateChanged((user) => {
+                        if (!user) {
+                            window.location.href = 'index.html';
+                        } else {
+                            const userName = user.displayName || user.email.split('@')[0];
+                            document.getElementById('userGreeting').textContent = userName;
+                            document.getElementById('profileName').textContent = userName;
+                            document.getElementById('profileEmail').textContent = user.email;
+                            
+                            loadUserOrders(user.uid);
+                            loadShippingAddress();
+                        }
+                    });
+                }
+            }, 1000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = (e) => {
+            const authModal = document.getElementById('shippingModal');
+            if (e.target == authModal) {
+                toggleModal('shippingModal');
+            }
+        };
     </script>
 </body>
 </html>
