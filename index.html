@@ -298,14 +298,14 @@
 <body>
 
     <nav id="main-nav" class="nav-wrapper flex justify-between items-center">
-        <a href="index" class="logo">
+        <a href="index.html" class="logo">
     NICHE
 </a>
         <ul class="hidden md:flex gap-10">
-            <li><a href="index" class="nav-link">الرئيسية</a></li>
-            <li><a href="shoes" class="nav-link">الأحذية</a></li>
-            <li><a href="clothes" class="nav-link">الملابس</a></li>
-            <li><a href="contact" class="nav-link">تواصل معنا</a></li>
+            <li><a href="index.html" class="nav-link">الرئيسية</a></li>
+            <li><a href="shoes.html" class="nav-link">الأحذية</a></li>
+            <li><a href="clothes.html" class="nav-link">الملابس</a></li>
+            <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
         </ul>
         <div class="flex items-center gap-6">
             <div onclick="toggleModal('authModal')" class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2">
@@ -443,7 +443,7 @@
     </h1>
     </div>
             <p class="text-gray-400 text-lg md:text-xl mb-12 max-w-xl mx-auto font-medium">في "نيش" بنهتم بالتفاصيل اللي بتخليك مختلف. أحذية وملابس بجودة عالمية وتصاميم مصرية أصلية.</p>
-            <button class="relative bg-black text-white px-14 py-5 rounded-2xl font-black text-lg shadow-xl overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+            <button onclick="toggleModal('authModal'); switchAuth('login');" class="relative bg-black text-white px-14 py-5 rounded-2xl font-black text-lg shadow-xl overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
     
     <span class="absolute top-0 bottom-0 left-[-100%] w-[150%] bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-30deg] transition-all duration-[800ms] cubic-bezier(0.19, 1, 0.22, 1) group-hover:left-[100%]"></span>
     
