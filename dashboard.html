@@ -585,16 +585,12 @@
         }
 
         // Firebase Auth State
-        if (window.auth) {
-            window.auth.onAuthStateChanged(handleAuthStateChange);
-        } else {
-            // If Firebase not loaded yet, load default data
-            setTimeout(() => {
-                if (window.auth) {
-                    window.auth.onAuthStateChanged(handleAuthStateChange);
-                }
-            }, 1000);
-        }
+        const checkAuth = setInterval(() => {
+            if (window.auth) {
+                clearInterval(checkAuth);
+                window.auth.onAuthStateChanged(handleAuthStateChange);
+            }
+        }, 100);
 
         // Close modal when clicking outside
         window.onclick = (e) => {
