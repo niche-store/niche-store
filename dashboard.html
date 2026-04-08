@@ -458,22 +458,20 @@
         });
 
         // Load user data on page load
-        function loadUserData() {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            
-            if (!currentUser) {
-                window.location.href = 'index.html';
-                return;
-            }
+       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-            const userName = currentUser.displayName || currentUser.email.split('@')[0];
-            const userEmail = currentUser.email;
+onAuthStateChanged(window.auth, (user) => {
+    if (!user) {
+        window.location.href = 'index.html';
+    } else {
+        const userName = user.displayName || user.email.split('@')[0];
+        const userEmail = user.email;
 
-            document.getElementById('userGreeting').textContent = userName.split(' ')[0];
-            document.getElementById('userNameDisplay').textContent = userName;
-            document.getElementById('userEmailDisplay').textContent = userEmail;
-        }
-
+        document.getElementById('userGreeting').textContent = userName.split(' ')[0];
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userEmailDisplay').textContent = userEmail;
+    }
+});
         // Show toast notification
         function showToast(message, isError = false) {
             const toast = document.getElementById('successToast');
