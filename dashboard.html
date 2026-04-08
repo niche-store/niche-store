@@ -167,6 +167,36 @@
         }
         .sidebar-link.active { background: #000; color: #fff; }
         .sidebar-link:hover:not(.active) { background: #f3f4f6; }
+
+        .account-menu { position: relative; }
+        .account-button {
+            display: flex; align-items: center; justify-content: center;
+            width: 52px; height: 52px; border-radius: 999px;
+            background: white; color: #000; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .account-button:hover { transform: translateY(-1px); box-shadow: 0 14px 35px rgba(0,0,0,0.18); }
+        .account-button i { font-size: 20px; }
+
+        .account-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            width: 220px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+            z-index: 1200;
+        }
+        .account-menu:hover .account-dropdown { display: block; }
+        .account-dropdown a {
+            display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+            color: #111; text-decoration: none; font-weight: 700; transition: background 0.2s ease;
+        }
+        .account-dropdown a:hover { background: #f7f7f7; }
     </style>
 </head>
 <body style="display:none;">
@@ -182,10 +212,21 @@
             <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
         </ul>
         <div class="flex items-center gap-6">
-            <button onclick="handleLogout()" class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2 font-bold text-xs">
-                <span>خروج</span>
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
+            <div class="account-menu">
+                <button type="button" class="account-button" aria-label="حساب المستخدم">
+                    <i class="fas fa-user"></i>
+                </button>
+                <div class="account-dropdown">
+                    <a href="#" onclick="activateSection('settings'); return false;">
+                        <i class="fas fa-user-cog"></i>
+                        إعدادات الحساب
+                    </a>
+                    <a href="#" onclick="handleLogout(); return false;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        تسجيل خروج
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -307,6 +348,19 @@
                                     <input type="text" id="settingsName" placeholder="اكتب اسمك" required>
                                 </div>
                                 <div>
+                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">الهاتف</label>
+                                    <input type="tel" id="settingsPhone" placeholder="01xxxxxxxxx">
+                                </div>
+                                <div>
+                                    <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">الجنس</label>
+                                    <select id="settingsGender" class="w-full rounded-2xl border border-gray-200 bg-white py-4 px-5 font-semibold text-gray-700">
+                                        <option value="">اختار النوع</option>
+                                        <option value="male">ذكر</option>
+                                        <option value="female">أنثى</option>
+                                        <option value="other">غير محدد</option>
+                                    </select>
+                                </div>
+                                <div>
                                     <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">كلمة المرور الجديدة</label>
                                     <input type="password" id="settingsNewPassword" placeholder="••••••••">
                                 </div>
@@ -314,7 +368,7 @@
                                     <label class="text-[12px] font-black uppercase mb-1 block text-gray-500">تأكيد كلمة المرور</label>
                                     <input type="password" id="settingsConfirmPassword" placeholder="••••••••">
                                 </div>
-                                <p class="text-xs text-gray-400">اترك الحقول فارغة إذا كنت لا تريد تغيير كلمة المرور.</p>
+                                <p class="text-xs text-gray-400">اترك الحقول الفارغة إذا كنت لا تريد تغيير كلمة المرور.</p>
                                 <button id="settingsSaveBtn" type="submit" class="btn-action">
                                     حفظ التغييرات
                                 </button>
@@ -631,10 +685,22 @@
             if (activeLink) activeLink.classList.add('active');
         }
 
+        function getAccountMeta(uid) {
+            const stored = localStorage.getItem('nicheAccountMeta_' + uid);
+            return stored ? JSON.parse(stored) : { phone: '', gender: '' };
+        }
+
+        function saveAccountMeta(uid, meta) {
+            localStorage.setItem('nicheAccountMeta_' + uid, JSON.stringify(meta));
+        }
+
         function updateSettingsForm(user) {
             const displayName = user.displayName || user.email.split('@')[0];
+            const meta = getAccountMeta(user.uid);
             document.getElementById('settingsName').value = displayName;
             document.getElementById('settingsEmail').value = user.email;
+            document.getElementById('settingsPhone').value = meta.phone || '';
+            document.getElementById('settingsGender').value = meta.gender || '';
             document.getElementById('settingsNewPassword').value = '';
             document.getElementById('settingsConfirmPassword').value = '';
         }
@@ -657,6 +723,14 @@
                 return;
             }
 
+            const phone = document.getElementById('settingsPhone').value.trim();
+            const gender = document.getElementById('settingsGender').value;
+
+            if (phone && !/^01[0-9]{9}$/.test(phone)) {
+                showToast('رقم الهاتف يجب أن يكون صحيحاً ويبدأ بـ 01.', true);
+                return;
+            }
+
             if (password && password.length < 8) {
                 showToast('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.', true);
                 return;
@@ -675,6 +749,8 @@
                 if (password) {
                     await window.updatePassword(user, password);
                 }
+
+                saveAccountMeta(user.uid, { phone, gender });
 
                 showToast('تم حفظ إعدادات الحساب بنجاح.', false);
                 document.getElementById('profileName').textContent = name;
