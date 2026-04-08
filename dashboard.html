@@ -698,26 +698,19 @@
         };
 
         // Firebase Auth State Handler
-        async function handleAuthStateChange(user) {
+        function handleAuthStateChange(user) {
             if (!user) {
                 window.location.href = 'index.html';
             } else {
                 showPage();
-                    const docRef = window.doc(window.db, "users", user.uid);
-                    const docSnap = await window.getDoc(docRef);
-
-                    let name = user.displayName || user.email.split('@')[0];
-                    if (docSnap.exists()) {
-                        name = docSnap.data().name || name;
-                    }
-
-                    document.getElementById('userGreeting').textContent = name;
-                    document.getElementById('profileName').textContent = name;
-                    document.getElementById('profileEmail').textContent = user.email;
-                    await updateSettingsForm(user);
-                    activateSection('dashboard');
-                    loadUserOrders(user.uid);
-                    loadShippingAddress();
+                const userName = user.displayName || user.email.split('@')[0];
+                document.getElementById('userGreeting').textContent = userName;
+                document.getElementById('profileName').textContent = userName;
+                document.getElementById('profileEmail').textContent = user.email;
+                updateSettingsForm(user);
+                activateSection('dashboard');
+                loadUserOrders(user.uid);
+                loadShippingAddress();
             }
         }
 
@@ -729,6 +722,15 @@
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.getElementById(section + 'Link');
             if (activeLink) activeLink.classList.add('active');
+        }
+
+        function getAccountMeta(uid) {
+            const stored = localStorage.getItem('nicheAccountMeta_' + uid);
+            return stored ? JSON.parse(stored) : { phone: '', gender: '' };
+        }
+
+        function saveAccountMeta(uid, meta) {
+            localStorage.setItem('nicheAccountMeta_' + uid, JSON.stringify(meta));
         }
 
         function checkPasswordStrength(pass) {
@@ -761,17 +763,10 @@
             });
         }
 
-        async function updateSettingsForm(user) {
+        function updateSettingsForm(user) {
             const displayName = user.displayName || user.email.split('@')[0];
-            const docRef = window.doc(window.db, 'users', user.uid);
-            const docSnap = await window.getDoc(docRef);
-
-            let meta = { phone: '', gender: '', name: '' };
-            if (docSnap.exists()) {
-                meta = docSnap.data();
-            }
-
-            document.getElementById('settingsName').value = meta.name || displayName;
+            const meta = getAccountMeta(user.uid);
+            document.getElementById('settingsName').value = displayName;
             document.getElementById('settingsEmail').value = user.email;
             document.getElementById('settingsPhone').value = meta.phone || '';
             document.getElementById('settingsGender').value = meta.gender || '';
@@ -827,6 +822,9 @@
                 const user = window.auth.currentUser;
                 if (!user) throw new Error('غير مسجل الدخول');
 
+                if (name !== (user.displayName || '')) {
+                    await window.updateProfile(user, { displayName: name });
+                }
 
                 if (password) {
                     // Reauthenticate
@@ -842,12 +840,7 @@
                     await window.updatePassword(user, password);
                 }
 
-                await window.setDoc(window.doc(window.db, "users", user.uid), {
-                    name: name,
-                    email: user.email,
-                    phone: phone,
-                    gender: gender
-                }, { merge: true });
+                saveAccountMeta(user.uid, { phone, gender });
 
                 showToast('تم حفظ إعدادات الحساب بنجاح.', false);
                 document.getElementById('profileName').textContent = name;
