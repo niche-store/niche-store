@@ -7,7 +7,8 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAjH6JBRtesJH9vLuHzYTxL4iakHVazzgE",
@@ -31,4 +32,5 @@ window.signInWithEmailAndPassword = signInWithEmailAndPassword;
 window.sendPasswordResetEmail = sendPasswordResetEmail;
 window.GoogleAuthProvider = GoogleAuthProvider;
 window.signInWithPopup = signInWithPopup;
+window.updateProfile = updateProfile;
 console.log("Firebase شغال 🔥");
