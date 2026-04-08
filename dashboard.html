@@ -698,7 +698,7 @@
         };
 
         // Firebase Auth State Handler
-        async function handleAuthStateChange(user) {
+        function handleAuthStateChange(user) {
             if (!user) {
                 window.location.href = 'index.html';
             } else {
@@ -707,7 +707,7 @@
                 document.getElementById('userGreeting').textContent = userName;
                 document.getElementById('profileName').textContent = userName;
                 document.getElementById('profileEmail').textContent = user.email;
-                await updateSettingsForm(user);
+                updateSettingsForm(user);
                 activateSection('dashboard');
                 loadUserOrders(user.uid);
                 loadShippingAddress();
@@ -722,6 +722,38 @@
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.getElementById(section + 'Link');
             if (activeLink) activeLink.classList.add('active');
+        }
+
+
+        // جلب بيانات الحساب من Firestore
+        async function getAccountMeta(uid) {
+            try {
+                const docRef = window.doc(window.db, 'users', uid);
+                const docSnap = await window.getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    // cache محلي (اختياري)
+                    localStorage.setItem('nicheAccountMeta_' + uid, JSON.stringify({ phone: data.phone || '', gender: data.gender || '' }));
+                    return { phone: data.phone || '', gender: data.gender || '' };
+                } else {
+                    return { phone: '', gender: '' };
+                }
+            } catch (e) {
+                // fallback للبيانات المحلية فقط عند فشل الشبكة
+                const stored = localStorage.getItem('nicheAccountMeta_' + uid);
+                return stored ? JSON.parse(stored) : { phone: '', gender: '' };
+            }
+        }
+
+        // حفظ بيانات الحساب في Firestore
+        async function saveAccountMeta(uid, meta) {
+            try {
+                const docRef = window.doc(window.db, 'users', uid);
+                await window.setDoc(docRef, meta, { merge: true });
+                localStorage.setItem('nicheAccountMeta_' + uid, JSON.stringify(meta));
+            } catch (e) {
+                showToast('تعذر حفظ بيانات الحساب على السحابة', true);
+            }
         }
 
         function checkPasswordStrength(pass) {
@@ -756,16 +788,10 @@
 
         async function updateSettingsForm(user) {
             const displayName = user.displayName || user.email.split('@')[0];
-            const docRef = window.doc(window.db, 'users', user.uid);
-            const docSnap = await window.getDoc(docRef);
-
-            let meta = { phone: '', gender: '', name: '' };
-            if (docSnap.exists()) {
-                meta = docSnap.data();
-            }
-
-            document.getElementById('settingsName').value = meta.name || displayName;
+            document.getElementById('settingsName').value = displayName;
             document.getElementById('settingsEmail').value = user.email;
+            // جلب بيانات meta من Firestore
+            const meta = await getAccountMeta(user.uid);
             document.getElementById('settingsPhone').value = meta.phone || '';
             document.getElementById('settingsGender').value = meta.gender || '';
             document.getElementById('settingsCurrentPassword').value = '';
@@ -838,12 +864,7 @@
                     await window.updatePassword(user, password);
                 }
 
-                await window.setDoc(window.doc(window.db, "users", user.uid), {
-                    name: name,
-                    email: user.email,
-                    phone: phone,
-                    gender: gender
-                }, { merge: true });
+                await saveAccountMeta(user.uid, { phone, gender });
 
                 showToast('تم حفظ إعدادات الحساب بنجاح.', false);
                 document.getElementById('profileName').textContent = name;
