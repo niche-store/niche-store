@@ -1800,18 +1800,15 @@
             return `
                 <div class="mt-4">
                     <div class="text-xs text-gray-500 font-black mb-2">${label}</div>
-                    <div class="flex flex-wrap gap-2">
-                        ${options.map((s) => {
-                            const active = selected === s;
-                            return `
-                                <button type="button"
-                                        class="${active ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-200 hover:bg-gray-100'} w-11 h-11 rounded-full border font-black text-xs transition"
-                                        onclick="selectProductSize('${productId}', '${s}')"
-                                        aria-pressed="${active ? 'true' : 'false'}">
-                                    ${s}
-                                </button>
-                            `;
-                        }).join('')}
+                    <div class="select-wrap">
+                        <select
+                            class="w-full"
+                            onchange="selectProductSize('${productId}', this.value)">
+                            <option value="" ${selected ? '' : 'selected'} disabled>اختر المقاس</option>
+                            ${options.map((s) => `
+                                <option value="${s}" ${selected === s ? 'selected' : ''}>${s}</option>
+                            `).join('')}
+                        </select>
                     </div>
                 </div>
             `;
