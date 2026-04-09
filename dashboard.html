@@ -109,11 +109,17 @@
         .select-wrap select:focus + .select-focus-ring { display: none; }
 
         /* Custom size dropdown (no native select chrome) */
+        /* كارت المنتج يرتفع فوق الجيران عند فتح القائمة (يحل تداخل الـ z-index مع transform) */
+        .dashboard-card.size-dropdown-open {
+            z-index: 80;
+            position: relative;
+        }
+
         .custom-select {
             position: relative;
-            background: #fff;
+            background: #ffffff;
             border-radius: 14px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #e2e8f0;
             cursor: pointer;
             font-weight: 900;
             font-size: 13px;
@@ -121,17 +127,24 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .custom-select:hover {
-            border-color: #000;
+            border-color: #94a3b8;
         }
         .custom-select.is-open {
             border-color: #000;
-            box-shadow: 0 10px 26px rgba(0,0,0,0.08);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+        }
+        .custom-select:not(.has-value) .selected {
+            color: #94a3b8;
+        }
+        .custom-select.has-value .selected {
+            color: #0f172a;
         }
         .custom-select .selected {
             padding: 12px 14px;
             padding-left: 40px;
             position: relative;
             user-select: none;
+            text-align: right;
         }
         .custom-select .selected::after {
             content: "";
@@ -141,8 +154,8 @@
             width: 10px;
             height: 10px;
             margin-top: -6px;
-            border-left: 2px solid #6b7280;
-            border-bottom: 2px solid #6b7280;
+            border-left: 2px solid #64748b;
+            border-bottom: 2px solid #64748b;
             transform: rotate(-45deg);
             transition: transform 0.2s;
         }
@@ -152,24 +165,44 @@
         }
         .custom-select .options {
             position: absolute;
-            top: calc(100% + 6px);
+            top: calc(100% + 8px);
             right: 0;
+            left: 0;
             width: 100%;
-            background: #fff;
+            background: #f1f5f9;
             border-radius: 14px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-            overflow: hidden;
-            z-index: 200;
-            max-height: 220px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+            overflow-x: hidden;
             overflow-y: auto;
+            z-index: 1200;
+            max-height: min(320px, 55vh);
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 #e2e8f0;
+        }
+        .custom-select .options::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-select .options::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 8px;
+        }
+        .custom-select .options::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 8px;
         }
         .custom-select .options div {
-            padding: 12px;
+            padding: 12px 14px;
+            text-align: right;
             transition: background 0.2s, color 0.2s;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .custom-select .options div:last-child {
+            border-bottom: none;
         }
         .custom-select .options div:hover {
-            background: #000;
+            background: #0f172a;
             color: #fff;
         }
 
@@ -256,7 +289,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #eee;
             transition: transform 0.3s ease;
         }
-        .dashboard-card:hover { transform: translateY(-5px); }
+        .dashboard-card:hover:not(.size-dropdown-open) { transform: translateY(-5px); }
 
         .status-badge {
             padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;
@@ -1857,6 +1890,12 @@
             renderFavoritesSection();
         }
 
+        function clearSizeDropdownCardLifts() {
+            document.querySelectorAll('.dashboard-card.size-dropdown-open').forEach((c) => {
+                c.classList.remove('size-dropdown-open');
+            });
+        }
+
         function toggleSizeDropdown(el, evt) {
             if (evt) {
                 evt.preventDefault();
@@ -1864,6 +1903,7 @@
             }
             const options = el.querySelector('.options');
             const opening = options.classList.contains('hidden');
+            clearSizeDropdownCardLifts();
             document.querySelectorAll('.custom-select.is-open').forEach((cs) => {
                 cs.classList.remove('is-open');
                 const o = cs.querySelector('.options');
@@ -1872,6 +1912,8 @@
             if (opening) {
                 options.classList.remove('hidden');
                 el.classList.add('is-open');
+                const card = el.closest('.dashboard-card');
+                if (card) card.classList.add('size-dropdown-open');
             }
         }
 
@@ -1890,6 +1932,7 @@
         }
 
         function closeAllSizeDropdowns() {
+            clearSizeDropdownCardLifts();
             document.querySelectorAll('.custom-select.is-open').forEach((cs) => {
                 cs.classList.remove('is-open');
                 const o = cs.querySelector('.options');
@@ -1904,13 +1947,11 @@
             const label = isShoesCategory(category) ? 'اختر مقاس الحذاء' : 'اختر المقاس';
             const placeholder = 'اختر المقاس';
             const displayText = selected || placeholder;
+            const hasValueClass = selected ? 'has-value' : '';
             return `
                 <div class="mt-4">
-                    <div class="flex items-center justify-between gap-3 mb-2">
-                        <div class="text-xs text-gray-500 font-black">${label}</div>
-                        ${selected ? `<div class="text-[11px] font-black bg-black text-white px-2 py-1 rounded-full">تم الاختيار: ${selected}</div>` : ''}
-                    </div>
-                    <div class="custom-select" role="listbox" aria-label="${label}" onclick="toggleSizeDropdown(this, event)">
+                    <div class="text-xs text-gray-500 font-black mb-2">${label}</div>
+                    <div class="custom-select ${hasValueClass}" role="listbox" aria-label="${label}" onclick="toggleSizeDropdown(this, event)">
                         <div class="selected">${displayText}</div>
                         <div class="options hidden">
                             ${options.map((s) => `
