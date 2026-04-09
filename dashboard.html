@@ -108,28 +108,69 @@
         }
         .select-wrap select:focus + .select-focus-ring { display: none; }
 
-        /* Compact, modern dropdown for size picker inside product cards */
-        .size-select {
-            width: 100%;
-            padding: 10px 14px;
-            padding-left: 44px; /* space for chevron in RTL */
+        /* Custom size dropdown (no native select chrome) */
+        .custom-select {
+            position: relative;
+            background: #fff;
             border-radius: 14px;
-            border: 1px solid #e5e7eb !important;
-            background: #f9fafb !important;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
             font-weight: 900;
             font-size: 13px;
-            line-height: 1.2;
+            overflow: visible;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .size-select:focus {
-            border-color: #000 !important;
-            background: #fff !important;
+        .custom-select:hover {
+            border-color: #000;
+        }
+        .custom-select.is-open {
+            border-color: #000;
             box-shadow: 0 10px 26px rgba(0,0,0,0.08);
         }
-        .select-wrap.size-select-wrap::after {
+        .custom-select .selected {
+            padding: 12px 14px;
+            padding-left: 40px;
+            position: relative;
+            user-select: none;
+        }
+        .custom-select .selected::after {
+            content: "";
+            position: absolute;
             left: 14px;
-            width: 18px;
-            height: 18px;
-            opacity: 0.85;
+            top: 50%;
+            width: 10px;
+            height: 10px;
+            margin-top: -6px;
+            border-left: 2px solid #6b7280;
+            border-bottom: 2px solid #6b7280;
+            transform: rotate(-45deg);
+            transition: transform 0.2s;
+        }
+        .custom-select.is-open .selected::after {
+            transform: rotate(135deg);
+            margin-top: -2px;
+        }
+        .custom-select .options {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            width: 100%;
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            overflow: hidden;
+            z-index: 200;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .custom-select .options div {
+            padding: 12px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .custom-select .options div:hover {
+            background: #000;
+            color: #fff;
         }
 
         .btn-action {
@@ -1816,26 +1857,66 @@
             renderFavoritesSection();
         }
 
+        function toggleSizeDropdown(el, evt) {
+            if (evt) {
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+            const options = el.querySelector('.options');
+            const opening = options.classList.contains('hidden');
+            document.querySelectorAll('.custom-select.is-open').forEach((cs) => {
+                cs.classList.remove('is-open');
+                const o = cs.querySelector('.options');
+                if (o) o.classList.add('hidden');
+            });
+            if (opening) {
+                options.classList.remove('hidden');
+                el.classList.add('is-open');
+            }
+        }
+
+        function selectSizeOption(evt, el, productId, size) {
+            if (evt) {
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+            const parent = el.closest('.custom-select');
+            if (parent) {
+                parent.classList.remove('is-open');
+                const opts = parent.querySelector('.options');
+                if (opts) opts.classList.add('hidden');
+            }
+            selectProductSize(productId, size);
+        }
+
+        function closeAllSizeDropdowns() {
+            document.querySelectorAll('.custom-select.is-open').forEach((cs) => {
+                cs.classList.remove('is-open');
+                const o = cs.querySelector('.options');
+                if (o) o.classList.add('hidden');
+            });
+        }
+
         function renderSizePicker(productId, category) {
             const options = getSizeOptionsForCategory(category);
             if (!options) return '';
             const selected = getSelectedSizeForProduct(productId);
             const label = isShoesCategory(category) ? 'اختر مقاس الحذاء' : 'اختر المقاس';
+            const placeholder = 'اختر المقاس';
+            const displayText = selected || placeholder;
             return `
                 <div class="mt-4">
                     <div class="flex items-center justify-between gap-3 mb-2">
                         <div class="text-xs text-gray-500 font-black">${label}</div>
                         ${selected ? `<div class="text-[11px] font-black bg-black text-white px-2 py-1 rounded-full">تم الاختيار: ${selected}</div>` : ''}
                     </div>
-                    <div class="select-wrap size-select-wrap">
-                        <select class="size-select"
-                                aria-label="${label}"
-                                onchange="selectProductSize('${productId}', this.value)">
-                            <option value="" ${selected ? '' : 'selected'} disabled>اختر المقاس</option>
+                    <div class="custom-select" role="listbox" aria-label="${label}" onclick="toggleSizeDropdown(this, event)">
+                        <div class="selected">${displayText}</div>
+                        <div class="options hidden">
                             ${options.map((s) => `
-                                <option value="${s}" ${selected === s ? 'selected' : ''}>${s}</option>
+                                <div role="option" onclick="selectSizeOption(event, this, '${productId}', '${s}')">${s}</div>
                             `).join('')}
-                        </select>
+                        </div>
                     </div>
                 </div>
             `;
@@ -2392,6 +2473,9 @@
             const menu = document.getElementById('dashboardAccountMenu');
             if (menu && !menu.contains(event.target)) {
                 menu.classList.remove('open');
+            }
+            if (!event.target.closest || !event.target.closest('.custom-select')) {
+                closeAllSizeDropdowns();
             }
         });
 
