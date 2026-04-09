@@ -697,6 +697,46 @@
             window.location.href = 'index.html';
         };
 
+        async function loadUserProfileFromFirestore(uid) {
+            if (!window.db || !window.doc || !window.getDoc) {
+                return getAccountMeta(uid);
+            }
+            try {
+                const ref = window.doc(window.db, 'users', uid);
+                const snap = await window.getDoc(ref);
+                if (snap.exists()) {
+                    const d = snap.data();
+                    const meta = {
+                        phone: d.phone != null ? String(d.phone) : '',
+                        gender: d.gender != null ? String(d.gender) : ''
+                    };
+                    saveAccountMeta(uid, meta);
+                    return meta;
+                }
+            } catch (e) {
+                console.error('loadUserProfileFromFirestore:', e);
+            }
+            return getAccountMeta(uid);
+        }
+
+        async function saveUserProfileToFirestore(user, meta) {
+            if (!window.db || !window.doc || !window.setDoc) {
+                throw new Error('Firestore غير جاهز');
+            }
+            const name = meta.displayName != null ? meta.displayName : (user.displayName || '');
+            await window.setDoc(
+                window.doc(window.db, 'users', user.uid),
+                {
+                    email: user.email,
+                    displayName: name,
+                    phone: meta.phone || '',
+                    gender: meta.gender || '',
+                    updatedAt: window.serverTimestamp ? window.serverTimestamp() : new Date()
+                },
+                { merge: true }
+            );
+        }
+
         // Firebase Auth State Handler
         function handleAuthStateChange(user) {
             if (!user) {
@@ -707,7 +747,9 @@
                 document.getElementById('userGreeting').textContent = userName;
                 document.getElementById('profileName').textContent = userName;
                 document.getElementById('profileEmail').textContent = user.email;
-                updateSettingsForm(user);
+                loadUserProfileFromFirestore(user.uid).then((meta) => {
+                    updateSettingsForm(user, meta);
+                });
                 activateSection('dashboard');
                 loadUserOrders(user.uid);
                 loadShippingAddress();
@@ -763,9 +805,9 @@
             });
         }
 
-        function updateSettingsForm(user) {
+        function updateSettingsForm(user, meta) {
+            if (!meta) meta = getAccountMeta(user.uid);
             const displayName = user.displayName || user.email.split('@')[0];
-            const meta = getAccountMeta(user.uid);
             document.getElementById('settingsName').value = displayName;
             document.getElementById('settingsEmail').value = user.email;
             document.getElementById('settingsPhone').value = meta.phone || '';
@@ -842,7 +884,26 @@
 
                 saveAccountMeta(user.uid, { phone, gender });
 
-                showToast('تم حفظ إعدادات الحساب بنجاح.', false);
+                let syncedToCloud = true;
+                if (window.db && window.doc && window.setDoc) {
+                    try {
+                        await saveUserProfileToFirestore(user, {
+                            displayName: name,
+                            phone,
+                            gender
+                        });
+                    } catch (fsErr) {
+                        console.error('Firestore profile save:', fsErr);
+                        syncedToCloud = false;
+                    }
+                }
+
+                showToast(
+                    syncedToCloud
+                        ? 'تم حفظ إعدادات الحساب بنجاح.'
+                        : 'تم التحديث على هذا الجهاز، لكن فشلت مزامنة السحابة. افتح Firebase Console ← Firestore → Rules واسمح للمستخدم بقراءة/كتابة وثيقة users/{uid} الخاصة به.',
+                    !syncedToCloud
+                );
                 document.getElementById('profileName').textContent = name;
                 document.getElementById('userGreeting').textContent = name;
                 document.getElementById('settingsCurrentPassword').value = '';

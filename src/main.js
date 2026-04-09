@@ -18,7 +18,8 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAjH6JBRtesJH9vLuHzYTxL4iakHVazzgE",
@@ -38,6 +39,7 @@ window.db = db;
 window.doc = doc;
 window.setDoc = setDoc;
 window.getDoc = getDoc;
+window.serverTimestamp = serverTimestamp;
 
 // 👇 أهم خطوة (عشان HTML يشوفهم)
 window.auth = auth;
