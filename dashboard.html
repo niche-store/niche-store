@@ -787,6 +787,7 @@
 
         // --- Shipping addresses (multi + default) ---
         let shippingAddressesState = { defaultId: '', items: [] };
+        let unsubscribeShippingAddresses = null;
 
         function getShippingAddressFallbackFromLocalStorage() {
             const address = localStorage.getItem('userShippingAddress');
@@ -827,8 +828,42 @@
                 console.error('loadShippingAddressesFromFirestore:', e);
                 shippingAddressesState = { defaultId: '', items: [] };
             }
+            // keep a local fallback copy of the default address only
+            try {
+                const def = getDefaultShippingAddress();
+                if (def) saveShippingAddressFallbackToLocalStorage(def);
+            } catch (_) {}
             renderShippingAddressesUI();
             renderCartShippingSummary();
+        }
+
+        function listenToShippingAddresses(uid) {
+            if (!uid) return;
+            if (!window.db || !window.doc || !window.onSnapshot) return;
+            if (unsubscribeShippingAddresses) unsubscribeShippingAddresses();
+            unsubscribeShippingAddresses = window.onSnapshot(
+                getShippingDocRef(uid),
+                (snap) => {
+                    if (snap.exists()) {
+                        const d = snap.data() || {};
+                        shippingAddressesState = {
+                            defaultId: d.defaultId || '',
+                            items: Array.isArray(d.items) ? d.items : []
+                        };
+                    } else {
+                        shippingAddressesState = { defaultId: '', items: [] };
+                    }
+                    try {
+                        const def = getDefaultShippingAddress();
+                        if (def) saveShippingAddressFallbackToLocalStorage(def);
+                    } catch (_) {}
+                    renderShippingAddressesUI();
+                    renderCartShippingSummary();
+                },
+                (err) => {
+                    console.error('listenToShippingAddresses:', err);
+                }
+            );
         }
 
         async function saveShippingAddressesToFirestore(uid) {
@@ -972,6 +1007,114 @@
                 latestTbody.innerHTML = '<tr><td class="py-4 text-gray-400">تعذر تحميل الطلبات</td></tr>';
                 if (allTbody) allTbody.innerHTML = '<tr><td class="py-4 text-gray-400">تعذر تحميل الطلبات</td></tr>';
             }
+        }
+
+        let unsubscribeOrders = null;
+
+        function renderOrdersToTables(uid, orders) {
+            const latestTbody = document.getElementById('ordersTableBody');
+            const allTbody = document.getElementById('ordersAllTableBody');
+            const totalOrdersEl = document.getElementById('totalOrders');
+            if (!latestTbody || !totalOrdersEl) return;
+
+            totalOrdersEl.textContent = orders.length;
+
+            // Auto-award loyalty points when you (admin) set status=completed in Firebase.
+            for (const o of orders) {
+                if (o.status === 'completed' && o.loyaltyDeliveredApplied !== true) {
+                    window.applyDeliveryPointsOnce?.(uid, o.id)
+                        ?.then(() => loadLoyaltyPoints(uid))
+                        ?.catch((e) => console.error('applyDeliveryPointsOnce:', e));
+                }
+            }
+
+            const latest = orders.slice(0, 8);
+            if (!latest.length) {
+                latestTbody.innerHTML = '<tr><td class="py-4 text-gray-400">لا يوجد طلبات حتى الآن</td></tr>';
+            } else {
+                latestTbody.innerHTML = latest.map((o) => {
+                    const date = o.createdAt?.toDate ? o.createdAt.toDate().toISOString().slice(0, 10) : (o.createdAt ? String(o.createdAt).slice(0, 10) : '');
+                    const itemsLabel = Array.isArray(o.items) && o.items.length
+                        ? `${o.items[0].name || o.items[0].productId}${o.items.length > 1 ? ` +${o.items.length - 1}` : ''}`
+                        : '—';
+                    const total = o.totals?.total ?? 0;
+                    return `
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="py-4 text-blue-600">#${o.id.slice(-6).toUpperCase()}</td>
+                            <td class="py-4">${date}</td>
+                            <td class="py-4">${itemsLabel}</td>
+                            <td class="py-4">
+                                <span class="status-badge ${getStatusBadgeClass(o.status)}">
+                                    ${getStatusLabel(o.status)}
+                                </span>
+                            </td>
+                            <td class="py-4">${formatEGP(total)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            if (allTbody) {
+                if (!orders.length) {
+                    allTbody.innerHTML = '<tr><td class="py-4 text-gray-400">لا يوجد طلبات حتى الآن</td></tr>';
+                } else {
+                    allTbody.innerHTML = orders.map((o) => {
+                        const date = o.createdAt?.toDate ? o.createdAt.toDate().toISOString().slice(0, 10) : (o.createdAt ? String(o.createdAt).slice(0, 10) : '');
+                        const itemsLabel = Array.isArray(o.items) && o.items.length
+                            ? `${o.items[0].name || o.items[0].productId}${o.items.length > 1 ? ` +${o.items.length - 1}` : ''}`
+                            : '—';
+                        const total = o.totals?.total ?? 0;
+                        const canCancel = o.status === 'pending';
+                        return `
+                            <tr class="border-b hover:bg-gray-50 transition align-top">
+                                <td class="py-4 text-blue-600">#${o.id.slice(-6).toUpperCase()}</td>
+                                <td class="py-4">${date}</td>
+                                <td class="py-4">${itemsLabel}</td>
+                                <td class="py-4">
+                                    <span class="status-badge ${getStatusBadgeClass(o.status)}">
+                                        ${getStatusLabel(o.status)}
+                                    </span>
+                                </td>
+                                <td class="py-4">${formatEGP(total)}</td>
+                                <td class="py-4">
+                                    ${canCancel
+                                        ? `<button type="button" onclick="cancelOrder('${o.id}')" class="bg-white border border-gray-200 text-red-600 px-4 py-2 rounded-xl font-black text-xs hover:bg-red-50 transition">إلغاء</button>`
+                                        : `<span class="text-gray-400 text-xs font-bold">—</span>`
+                                    }
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+
+        function listenToOrders(uid) {
+            if (!uid) return;
+            if (!window.db || !window.collection || !window.query || !window.where || !window.onSnapshot) return;
+            if (unsubscribeOrders) unsubscribeOrders();
+
+            // We'll listen without orderBy to avoid composite-index requirements.
+            const q = window.query(
+                window.collection(window.db, 'orders'),
+                window.where('userId', '==', uid)
+            );
+
+            unsubscribeOrders = window.onSnapshot(
+                q,
+                (snap) => {
+                    const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+                    orders.sort((a, b) => {
+                        const ad = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+                        const bd = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+                        return bd - ad;
+                    });
+                    renderOrdersToTables(uid, orders);
+                },
+                (err) => {
+                    console.error('listenToOrders:', err);
+                }
+            );
         }
 
         async function cancelOrder(orderId) {
@@ -1255,7 +1398,8 @@
                     activateSection('dashboard');
                 }
                 loadUserOrdersFromFirestore(user.uid);
-                loadShippingAddressesFromFirestore(user.uid);
+                listenToOrders(user.uid);
+                listenToShippingAddresses(user.uid);
                 loadCartFromFirestore(user.uid);
                 loadFavoritesFromFirestore(user.uid);
                 loadLoyaltyPoints(user.uid);
