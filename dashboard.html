@@ -630,32 +630,52 @@
                 <input type="hidden" id="shippingId">
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">اسم العنوان</label>
-                    <input type="text" id="shippingLabel" placeholder="مثال: المنزل / العمل" required>
+                    <select id="shippingLabel" required
+                            class="w-full p-[16px] px-[22px] bg-[#f8f9fa] border-2 border-transparent rounded-[18px] font-semibold outline-none transition">
+                        <option value="" disabled selected>اختر</option>
+                        <option value="المنزل">المنزل</option>
+                        <option value="العمل">العمل</option>
+                    </select>
                 </div>
 
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">المحافظة</label>
-                    <input type="text" id="shippingCity" placeholder="مثال: القاهرة" required>
+                    <input type="text" id="shippingCity" placeholder="مثال: القاهرة" required
+                           pattern="[\u0600-\u06FFa-zA-Z\s]+"
+                           oninput="this.value=this.value.replace(/[^\u0600-\u06FFa-zA-Z\s]/g,'')">
                 </div>
 
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">المنطقة</label>
-                    <input type="text" id="shippingDistrict" placeholder="مثال: مصر الجديدة" required>
+                    <input type="text" id="shippingDistrict" placeholder="مثال: مصر الجديدة" required
+                           pattern="[\u0600-\u06FFa-zA-Z\s]+"
+                           oninput="this.value=this.value.replace(/[^\u0600-\u06FFa-zA-Z\s]/g,'')">
                 </div>
 
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">الشارع</label>
-                    <input type="text" id="shippingStreet" placeholder="اسم الشارع" required>
+                    <input type="text" id="shippingStreet" placeholder="اسم الشارع" required
+                           pattern="[\u0600-\u06FFa-zA-Z\s]+"
+                           oninput="this.value=this.value.replace(/[^\u0600-\u06FFa-zA-Z\s]/g,'')">
                 </div>
 
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">رقم المبنى</label>
-                    <input type="text" id="shippingBuilding" placeholder="123" required>
+                    <input type="text" id="shippingBuilding" placeholder="123" required
+                           pattern="[\u0600-\u06FFa-zA-Z0-9\s\-\/]+"
+                           oninput="this.value=this.value.replace(/[^\u0600-\u06FFa-zA-Z0-9\s\-\/]/g,'')">
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-[12px] font-black uppercase mb-1 block mr-1">أقرب معلم</label>
+                    <input type="text" id="shippingLandmark" placeholder="مثال: بجوار مسجد/مدرسة..." required>
                 </div>
 
                 <div class="mb-6">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">رقم الهاتف</label>
-                    <input type="tel" id="shippingPhone" placeholder="01xxxxxxxxx" required>
+                    <input type="tel" id="shippingPhone" placeholder="01xxxxxxxxx" required
+                           inputmode="numeric" minlength="11" maxlength="11"
+                           oninput="this.value=this.value.replace(/\\D/g,'').slice(0,11)">
                 </div>
 
                 <button id="shippingBtn" class="btn-action">
@@ -1181,6 +1201,7 @@
                                         <p><span class="text-gray-500">المنطقة:</span> ${a.district || ''}</p>
                                         <p><span class="text-gray-500">الشارع:</span> ${a.street || ''}</p>
                                         <p><span class="text-gray-500">رقم المبنى:</span> ${a.building || ''}</p>
+                                        <p><span class="text-gray-500">أقرب معلم:</span> ${a.landmark || '—'}</p>
                                         <p><span class="text-gray-500">الهاتف:</span> ${a.phone || ''}</p>
                                     </div>
                                 </div>
@@ -1204,6 +1225,7 @@
             const districtEl = document.getElementById('shippingDistrict');
             const streetEl = document.getElementById('shippingStreet');
             const buildingEl = document.getElementById('shippingBuilding');
+            const landmarkEl = document.getElementById('shippingLandmark');
             const phoneEl = document.getElementById('shippingPhone');
             if (idEl) idEl.value = '';
             if (labelEl) labelEl.value = '';
@@ -1211,6 +1233,7 @@
             if (districtEl) districtEl.value = '';
             if (streetEl) streetEl.value = '';
             if (buildingEl) buildingEl.value = '';
+            if (landmarkEl) landmarkEl.value = '';
             if (phoneEl) phoneEl.value = '';
             toggleModal('shippingModal');
         }
@@ -1224,6 +1247,7 @@
             document.getElementById('shippingDistrict').value = a.district || '';
             document.getElementById('shippingStreet').value = a.street || '';
             document.getElementById('shippingBuilding').value = a.building || '';
+            document.getElementById('shippingLandmark').value = a.landmark || '';
             document.getElementById('shippingPhone').value = a.phone || '';
             toggleModal('shippingModal');
         }
@@ -1238,14 +1262,43 @@
             const district = document.getElementById('shippingDistrict').value.trim();
             const street = document.getElementById('shippingStreet').value.trim();
             const building = document.getElementById('shippingBuilding').value.trim();
+            const landmark = document.getElementById('shippingLandmark').value.trim();
             const phone = document.getElementById('shippingPhone').value.trim();
 
             const btn = document.getElementById('shippingBtn');
             const loader = document.getElementById('shippingLoader');
             const text = document.getElementById('shippingText');
 
-            if (!label || !city || !district || !street || !building || !phone) {
-                showToast("يرجى ملء جميع الحقول", true);
+            const lettersOnly = /^[\u0600-\u06FFa-zA-Z\s]+$/;
+            const buildingAllowed = /^[\u0600-\u06FFa-zA-Z0-9\s\-\/]+$/;
+            const phoneDigits = phone.replace(/\D/g, '');
+
+            if (!label || (label !== 'المنزل' && label !== 'العمل')) {
+                showToast("اختر اسم العنوان (المنزل/العمل)", true);
+                return;
+            }
+            if (!city || !lettersOnly.test(city)) {
+                showToast("المحافظة يجب أن تحتوي على حروف فقط", true);
+                return;
+            }
+            if (!district || !lettersOnly.test(district)) {
+                showToast("المنطقة يجب أن تحتوي على حروف فقط", true);
+                return;
+            }
+            if (!street || !lettersOnly.test(street)) {
+                showToast("الشارع يجب أن يحتوي على حروف فقط", true);
+                return;
+            }
+            if (!building || !buildingAllowed.test(building)) {
+                showToast("رقم المبنى يسمح بحروف وأرقام فقط", true);
+                return;
+            }
+            if (!landmark || landmark.length < 3) {
+                showToast("اكتب أقرب معلم", true);
+                return;
+            }
+            if (phoneDigits.length !== 11 || !/^01[0-9]{9}$/.test(phoneDigits)) {
+                showToast("رقم الهاتف يجب أن يكون 11 رقم ويبدأ بـ 01", true);
                 return;
             }
 
@@ -1263,7 +1316,8 @@
                     district,
                     street,
                     building,
-                    phone,
+                    landmark,
+                    phone: phoneDigits,
                     updatedAt: now.toISOString()
                 };
 
@@ -1419,6 +1473,7 @@
         }
 
         function activateSection(section) {
+            window.__activeSection = section;
             const dashboard = document.getElementById('dashboardOverviewSection');
             const settings = document.getElementById('accountSettingsSection');
             const shop = document.getElementById('shopSection');
@@ -1436,6 +1491,8 @@
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.getElementById(section + 'Link');
             if (activeLink) activeLink.classList.add('active');
+
+            updateBottomContinueBarVisibility();
         }
 
         function getAccountMeta(uid) {
@@ -1819,15 +1876,20 @@
             const navBadge = document.getElementById('navCartCount');
             const shopBadge = document.getElementById('shopCartCount');
             const checkoutBtn = document.getElementById('checkoutBtn');
-            const bottomBar = document.getElementById('bottomContinueBar');
             if (navBadge) navBadge.textContent = cartCount;
             if (shopBadge) shopBadge.textContent = cartCount;
             if (checkoutBtn) {
                 checkoutBtn.classList.toggle('hidden', cartCount === 0);
             }
-            if (bottomBar) {
-                bottomBar.classList.toggle('hidden', cartCount === 0);
-            }
+            updateBottomContinueBarVisibility();
+        }
+
+        function updateBottomContinueBarVisibility() {
+            const bottomBar = document.getElementById('bottomContinueBar');
+            if (!bottomBar) return;
+            const cartCount = Object.values(cartItems).reduce((sum, item) => sum + (item.qty || 0), 0);
+            const active = window.__activeSection || 'dashboard';
+            bottomBar.classList.toggle('hidden', cartCount === 0 || active === 'cart');
         }
 
         function getProductById(productId) {
@@ -1950,6 +2012,7 @@
                     <p><span class="text-gray-500">المنطقة:</span> ${address.district}</p>
                     <p><span class="text-gray-500">الشارع:</span> ${address.street}</p>
                     <p><span class="text-gray-500">رقم المبنى:</span> ${address.building}</p>
+                    <p><span class="text-gray-500">أقرب معلم:</span> ${address.landmark || '—'}</p>
                     <p><span class="text-gray-500">الهاتف:</span> ${address.phone}</p>
                 </div>
             `;
