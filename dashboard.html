@@ -763,25 +763,34 @@
             });
         }
 
-        async function updateSettingsForm(user) {
+        function updateSettingsForm(user) {
             const displayName = user.displayName || user.email.split('@')[0];
-            const docRef = doc(db, "users", user.uid);
-const docSnap = await getDoc(docRef);
-
-let meta = { phone: '', gender: '' };
-
-if (docSnap.exists()) {
-  meta = docSnap.data();
-}
             document.getElementById('settingsName').value = displayName;
             document.getElementById('settingsEmail').value = user.email;
-            document.getElementById('settingsPhone').value = meta.phone || '';
-            document.getElementById('settingsGender').value = meta.gender || '';
             document.getElementById('settingsCurrentPassword').value = '';
             document.getElementById('settingsNewPassword').value = '';
             document.getElementById('settingsConfirmPassword').value = '';
-            selectGender(meta.gender || '');
-            checkPasswordStrength('');
+            // جلب البيانات من Firestore
+            (async () => {
+                try {
+                    const docRef = window.doc(window.db, "users", user.uid);
+                    const docSnap = await window.getDoc(docRef);
+                    let meta = { phone: '', gender: '' };
+                    if (docSnap.exists()) {
+                        meta = docSnap.data();
+                        // كاش محلي
+                        saveAccountMeta(user.uid, meta);
+                    }
+                    document.getElementById('settingsPhone').value = meta.phone || '';
+                    document.getElementById('settingsGender').value = meta.gender || '';
+                    selectGender(meta.gender || '');
+                } catch (e) {
+                    document.getElementById('settingsPhone').value = '';
+                    document.getElementById('settingsGender').value = '';
+                    selectGender('');
+                }
+                checkPasswordStrength('');
+            })();
         }
 
         async function handleAccountSettingsSave(event) {
@@ -847,10 +856,10 @@ if (docSnap.exists()) {
                     await window.updatePassword(user, password);
                 }
 
-                await setDoc(doc(db, "users", user.uid), {
-  phone,
-  gender
-}, { merge: true });
+                // حفظ البيانات في Firestore
+                await window.setDoc(window.doc(window.db, "users", user.uid), { phone, gender }, { merge: true });
+                // كاش محلي
+                saveAccountMeta(user.uid, { phone, gender });
 
                 showToast('تم حفظ إعدادات الحساب بنجاح.', false);
                 document.getElementById('profileName').textContent = name;
