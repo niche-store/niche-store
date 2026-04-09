@@ -31,6 +31,23 @@
             display: inline-block;
             transition: all 0.3s ease;
         }
+        /* الخط اللي تحت */
+.logo::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    width: 0%;
+    height: 2px;
+    background: white;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+/* لما تعمل hover */
+.logo:hover::after {
+    width: 100%;
+}
         .logo:hover { letter-spacing: 1px; text-shadow: 0 0 6px rgba(255,255,255,0.6), 0 0 12px rgba(255,255,255,0.4), 0 0 20px rgba(255,255,255,0.2); }
 
         .nav-link { position: relative; font-weight: 600; color: #ffffff; padding: 5px 0; transition: 0.3s; opacity: 0.8; }
