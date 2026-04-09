@@ -159,7 +159,9 @@
             padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;
         }
         .status-pending { background: #fef3c7; color: #92400e; }
+        .status-shipping { background: #dbeafe; color: #1e40af; }
         .status-completed { background: #d1fae5; color: #065f46; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
 
         .sidebar-link {
             display: flex; align-items: center; gap: 12px; padding: 12px 20px;
@@ -842,12 +844,15 @@
 
         function getStatusLabel(status) {
             if (status === 'completed') return 'تم التوصيل';
+            if (status === 'shipping') return 'جاري الشحن';
             if (status === 'cancelled') return 'ملغي';
             return 'قيد المعالجة';
         }
 
         function getStatusBadgeClass(status) {
             if (status === 'completed') return 'status-completed';
+            if (status === 'shipping') return 'status-shipping';
+            if (status === 'cancelled') return 'status-cancelled';
             return 'status-pending';
         }
 
@@ -863,13 +868,31 @@
             if (allTbody) allTbody.innerHTML = '<tr><td class="py-4 text-gray-400">جاري التحميل...</td></tr>';
 
             try {
-                const q = window.query(
-                    window.collection(window.db, 'orders'),
-                    window.where('userId', '==', uid),
-                    window.orderBy('createdAt', 'desc')
-                );
-                const snap = await window.getDocs(q);
-                const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+                let orders = [];
+                try {
+                    // Preferred (requires composite index in some projects)
+                    const q = window.query(
+                        window.collection(window.db, 'orders'),
+                        window.where('userId', '==', uid),
+                        window.orderBy('createdAt', 'desc')
+                    );
+                    const snap = await window.getDocs(q);
+                    orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+                } catch (idxErr) {
+                    console.error('Orders query (with orderBy) failed, falling back:', idxErr);
+                    // Fallback: no orderBy (no composite index), then sort client-side
+                    const q2 = window.query(
+                        window.collection(window.db, 'orders'),
+                        window.where('userId', '==', uid)
+                    );
+                    const snap2 = await window.getDocs(q2);
+                    orders = snap2.docs.map((d) => ({ id: d.id, ...d.data() }));
+                    orders.sort((a, b) => {
+                        const ad = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+                        const bd = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+                        return bd - ad;
+                    });
+                }
 
                 totalOrdersEl.textContent = orders.length;
 
@@ -918,9 +941,17 @@
                                     <td class="py-4">${date}</td>
                                     <td class="py-4">${itemsLabel}</td>
                                     <td class="py-4">
-                                        <span class="status-badge ${getStatusBadgeClass(o.status)}">
-                                            ${getStatusLabel(o.status)}
-                                        </span>
+                                        <div class="flex items-center gap-3">
+                                            <span class="status-badge ${getStatusBadgeClass(o.status)}">
+                                                ${getStatusLabel(o.status)}
+                                            </span>
+                                            <select class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-black"
+                                                    onchange="updateOrderStatus('${o.id}', this.value)">
+                                                <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>قيد المعالجة</option>
+                                                <option value="shipping" ${o.status === 'shipping' ? 'selected' : ''}>جاري الشحن</option>
+                                                <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>تم التوصيل</option>
+                                            </select>
+                                        </div>
                                     </td>
                                     <td class="py-4">${formatEGP(total)}</td>
                                     <td class="py-4">
@@ -941,36 +972,47 @@
             }
         }
 
-        async function cancelOrder(orderId) {
+        async function updateOrderStatus(orderId, nextStatus) {
             if (!currentUid) {
                 showToast('يجب تسجيل الدخول.', true);
                 return;
             }
             if (!orderId) return;
+            const allowed = ['pending', 'shipping', 'completed'];
+            if (!allowed.includes(nextStatus)) return;
             if (!window.db || !window.doc || !window.updateDoc) {
                 showToast('Firestore غير جاهز.', true);
                 return;
             }
             try {
                 await window.updateDoc(window.doc(window.db, 'orders', orderId), {
-                    status: 'cancelled',
-                    cancelledAt: window.serverTimestamp ? window.serverTimestamp() : new Date()
+                    status: nextStatus
                 });
+                showToast('تم تحديث حالة الطلب.', false);
+                loadUserOrdersFromFirestore(currentUid);
+            } catch (e) {
+                console.error('updateOrderStatus:', e);
+                showToast('فشل تحديث الحالة. تأكد من Rules.', true);
+                loadUserOrdersFromFirestore(currentUid);
+            }
+        }
 
-                // loyalty -50
-                try {
-                    if (window.increment) {
-                        await window.updateDoc(window.doc(window.db, 'users', currentUid), {
-                            loyaltyPoints: window.increment(-50)
-                        });
-                        loadLoyaltyPoints(currentUid);
-                    }
-                } catch (lpErr) {
-                    console.error('loyaltyPoints decrement:', lpErr);
-                }
+        async function cancelOrder(orderId) {
+            if (!currentUid) {
+                showToast('يجب تسجيل الدخول.', true);
+                return;
+            }
+            if (!orderId) return;
+            if (!window.cancelOrderAndDeductPoints) {
+                showToast('Firestore غير جاهز.', true);
+                return;
+            }
+            try {
+                await window.cancelOrderAndDeductPoints(currentUid, orderId);
 
                 showToast('تم إلغاء الطلب.', false);
                 loadUserOrdersFromFirestore(currentUid);
+                loadLoyaltyPoints(currentUid);
             } catch (e) {
                 console.error('cancelOrder:', e);
                 showToast('فشل إلغاء الطلب. تأكد من Rules.', true);
@@ -1976,11 +2018,8 @@
             }
 
             try {
-                const orderId = generateDocId('order');
-                const orderRef = window.doc(window.db, 'orders', orderId);
                 const items = serializeCartItemsForFirestore();
-                await window.setDoc(orderRef, {
-                    userId: currentUid,
+                const orderId = await window.createOrderAndAwardPoints(currentUid, {
                     items,
                     totals: {
                         itemsCount: totals.itemsCount,
@@ -1994,20 +2033,11 @@
                     createdAt: window.serverTimestamp ? window.serverTimestamp() : new Date()
                 });
 
-                // loyalty +50
-                try {
-                    if (window.updateDoc && window.increment) {
-                        await window.updateDoc(window.doc(window.db, 'users', currentUid), {
-                            loyaltyPoints: window.increment(50)
-                        });
-                        loadLoyaltyPoints(currentUid);
-                    }
-                } catch (lpErr) {
-                    console.error('loyaltyPoints increment:', lpErr);
-                }
+                // loyaltyPoints are updated by Cloud Function (admin), not client
 
-                // refresh orders UI from Firestore
+                // refresh orders + points UI from Firestore
                 loadUserOrdersFromFirestore(currentUid);
+                loadLoyaltyPoints(currentUid);
 
                 showToast('تم تأكيد الطلب بنجاح ✓', false);
                 clearCart();
