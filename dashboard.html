@@ -277,7 +277,7 @@
                 <a href="#" id="dashboardLink" onclick="activateSection('dashboard'); return false;" class="sidebar-link active"><i class="fas fa-th-large"></i> لوحة التحكم</a>
                 <a href="#" id="shopLink" onclick="activateSection('shop'); return false;" class="sidebar-link"><i class="fas fa-shopping-bag"></i> اطلب منتجات</a>
                 <a href="#" id="cartLink" onclick="activateSection('cart'); return false;" class="sidebar-link"><i class="fas fa-shopping-cart"></i> السلة</a>
-                <a href="#" class="sidebar-link"><i class="fas fa-box"></i> طلباتي</a>
+                <a href="#" id="ordersLink" onclick="activateSection('orders'); return false;" class="sidebar-link"><i class="fas fa-box"></i> طلباتي</a>
                 <a href="#" id="favoritesLink" onclick="activateSection('favorites'); return false;" class="sidebar-link"><i class="fas fa-heart"></i> المفضلة</a>
                 <a href="#" id="settingsLink" onclick="activateSection('settings'); return false;" class="sidebar-link"><i class="fas fa-user-cog"></i> إعدادات الحساب</a>
             </div>
@@ -310,7 +310,7 @@
                         </div>
                         <div>
                             <p class="text-gray-500 text-xs font-bold">نقاط الولاء</p>
-                            <h3 class="text-xl font-black">150 نقطة</h3>
+                            <h3 class="text-xl font-black"><span id="loyaltyPoints">0</span> نقطة</h3>
                         </div>
                     </div>
                 </div>
@@ -576,6 +576,40 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="ordersSection" class="space-y-8 hidden">
+                    <div class="dashboard-card">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-xl font-black">طلباتي</h2>
+                                <p class="text-gray-500 text-sm mt-2">عرض كل الطلبات الخاصة بك وحالتها.</p>
+                            </div>
+                            <button type="button" onclick="activateSection('shop'); return false;" class="bg-white border border-gray-200 text-black px-5 py-3 rounded-xl font-black text-sm hover:bg-gray-100 transition">
+                                طلب جديد
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right border-collapse">
+                                <thead>
+                                    <tr class="text-gray-400 text-sm border-b">
+                                        <th class="pb-4">رقم الطلب</th>
+                                        <th class="pb-4">التاريخ</th>
+                                        <th class="pb-4">العناصر</th>
+                                        <th class="pb-4">الحالة</th>
+                                        <th class="pb-4">الإجمالي</th>
+                                        <th class="pb-4">إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm font-bold" id="ordersAllTableBody">
+                                    <tr>
+                                        <td class="py-4 text-gray-400">لا يوجد طلبات حتى الآن</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -747,18 +781,7 @@
             }, 3000);
         }
 
-        // Store orders in localStorage
-        function getOrders() {
-            const orders = localStorage.getItem('userOrders');
-            return orders ? JSON.parse(orders) : [
-                { id: '#8821', date: '2026-04-01', item: 'نايك Air Max', status: 'completed', price: '1,250 ج.م' },
-                { id: '#8895', date: '2026-04-07', item: 'تيشيرت بريميوم', status: 'pending', price: '350 ج.م' }
-            ];
-        }
-
-        function saveOrders(orders) {
-            localStorage.setItem('userOrders', JSON.stringify(orders));
-        }
+        // Orders are loaded from Firestore now (no localStorage seed).
 
         // --- Shipping addresses (multi + default) ---
         let shippingAddressesState = { defaultId: '', items: [] };
@@ -817,30 +840,141 @@
             }, { merge: true });
         }
 
-        // Load Orders Function
-        function loadUserOrders(uid) {
-            const orders = getOrders();
-            const tbody = document.getElementById('ordersTableBody');
-            document.getElementById('totalOrders').textContent = orders.length;
-            
-            if (orders.length === 0) {
-                tbody.innerHTML = '<tr><td class="py-4 text-gray-400">لا يوجد طلبات حتى الآن</td></tr>';
+        function getStatusLabel(status) {
+            if (status === 'completed') return 'تم التوصيل';
+            if (status === 'cancelled') return 'ملغي';
+            return 'قيد المعالجة';
+        }
+
+        function getStatusBadgeClass(status) {
+            if (status === 'completed') return 'status-completed';
+            return 'status-pending';
+        }
+
+        async function loadUserOrdersFromFirestore(uid) {
+            const latestTbody = document.getElementById('ordersTableBody');
+            const allTbody = document.getElementById('ordersAllTableBody');
+            const totalOrdersEl = document.getElementById('totalOrders');
+
+            if (!latestTbody || !totalOrdersEl) return;
+            if (!window.db || !window.collection || !window.query || !window.where || !window.orderBy || !window.getDocs) return;
+
+            latestTbody.innerHTML = '<tr><td class="py-4 text-gray-400">جاري التحميل...</td></tr>';
+            if (allTbody) allTbody.innerHTML = '<tr><td class="py-4 text-gray-400">جاري التحميل...</td></tr>';
+
+            try {
+                const q = window.query(
+                    window.collection(window.db, 'orders'),
+                    window.where('userId', '==', uid),
+                    window.orderBy('createdAt', 'desc')
+                );
+                const snap = await window.getDocs(q);
+                const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+                totalOrdersEl.textContent = orders.length;
+
+                // Latest orders (top 8)
+                const latest = orders.slice(0, 8);
+                if (!latest.length) {
+                    latestTbody.innerHTML = '<tr><td class="py-4 text-gray-400">لا يوجد طلبات حتى الآن</td></tr>';
+                } else {
+                    latestTbody.innerHTML = latest.map((o) => {
+                        const date = o.createdAt?.toDate ? o.createdAt.toDate().toISOString().slice(0, 10) : (o.createdAt ? String(o.createdAt).slice(0, 10) : '');
+                        const itemsLabel = Array.isArray(o.items) && o.items.length
+                            ? `${o.items[0].name || o.items[0].productId}${o.items.length > 1 ? ` +${o.items.length - 1}` : ''}`
+                            : '—';
+                        const total = o.totals?.total ?? 0;
+                        return `
+                            <tr class="border-b hover:bg-gray-50 transition">
+                                <td class="py-4 text-blue-600">#${o.id.slice(-6).toUpperCase()}</td>
+                                <td class="py-4">${date}</td>
+                                <td class="py-4">${itemsLabel}</td>
+                                <td class="py-4">
+                                    <span class="status-badge ${getStatusBadgeClass(o.status)}">
+                                        ${getStatusLabel(o.status)}
+                                    </span>
+                                </td>
+                                <td class="py-4">${formatEGP(total)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                // All orders table
+                if (allTbody) {
+                    if (!orders.length) {
+                        allTbody.innerHTML = '<tr><td class="py-4 text-gray-400">لا يوجد طلبات حتى الآن</td></tr>';
+                    } else {
+                        allTbody.innerHTML = orders.map((o) => {
+                            const date = o.createdAt?.toDate ? o.createdAt.toDate().toISOString().slice(0, 10) : (o.createdAt ? String(o.createdAt).slice(0, 10) : '');
+                            const itemsLabel = Array.isArray(o.items) && o.items.length
+                                ? `${o.items[0].name || o.items[0].productId}${o.items.length > 1 ? ` +${o.items.length - 1}` : ''}`
+                                : '—';
+                            const total = o.totals?.total ?? 0;
+                            const canCancel = o.status === 'pending';
+                            return `
+                                <tr class="border-b hover:bg-gray-50 transition align-top">
+                                    <td class="py-4 text-blue-600">#${o.id.slice(-6).toUpperCase()}</td>
+                                    <td class="py-4">${date}</td>
+                                    <td class="py-4">${itemsLabel}</td>
+                                    <td class="py-4">
+                                        <span class="status-badge ${getStatusBadgeClass(o.status)}">
+                                            ${getStatusLabel(o.status)}
+                                        </span>
+                                    </td>
+                                    <td class="py-4">${formatEGP(total)}</td>
+                                    <td class="py-4">
+                                        ${canCancel
+                                            ? `<button type="button" onclick="cancelOrder('${o.id}')" class="bg-white border border-gray-200 text-red-600 px-4 py-2 rounded-xl font-black text-xs hover:bg-red-50 transition">إلغاء</button>`
+                                            : `<span class="text-gray-400 text-xs font-bold">—</span>`
+                                        }
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+                }
+            } catch (e) {
+                console.error('loadUserOrdersFromFirestore:', e);
+                latestTbody.innerHTML = '<tr><td class="py-4 text-gray-400">تعذر تحميل الطلبات</td></tr>';
+                if (allTbody) allTbody.innerHTML = '<tr><td class="py-4 text-gray-400">تعذر تحميل الطلبات</td></tr>';
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            if (!currentUid) {
+                showToast('يجب تسجيل الدخول.', true);
                 return;
             }
+            if (!orderId) return;
+            if (!window.db || !window.doc || !window.updateDoc) {
+                showToast('Firestore غير جاهز.', true);
+                return;
+            }
+            try {
+                await window.updateDoc(window.doc(window.db, 'orders', orderId), {
+                    status: 'cancelled',
+                    cancelledAt: window.serverTimestamp ? window.serverTimestamp() : new Date()
+                });
 
-            tbody.innerHTML = orders.map(order => `
-                <tr class="border-b hover:bg-gray-50 transition">
-                    <td class="py-4 text-blue-600">${order.id}</td>
-                    <td class="py-4">${order.date}</td>
-                    <td class="py-4">${order.item}</td>
-                    <td class="py-4">
-                        <span class="status-badge ${order.status === 'completed' ? 'status-completed' : 'status-pending'}">
-                            ${order.status === 'completed' ? 'تم التوصيل' : 'قيد المعالجة'}
-                        </span>
-                    </td>
-                    <td class="py-4">${order.price}</td>
-                </tr>
-            `).join('');
+                // loyalty -50
+                try {
+                    if (window.increment) {
+                        await window.updateDoc(window.doc(window.db, 'users', currentUid), {
+                            loyaltyPoints: window.increment(-50)
+                        });
+                        loadLoyaltyPoints(currentUid);
+                    }
+                } catch (lpErr) {
+                    console.error('loyaltyPoints decrement:', lpErr);
+                }
+
+                showToast('تم إلغاء الطلب.', false);
+                loadUserOrdersFromFirestore(currentUid);
+            } catch (e) {
+                console.error('cancelOrder:', e);
+                showToast('فشل إلغاء الطلب. تأكد من Rules.', true);
+            }
         }
 
         function renderShippingAddressesUI() {
@@ -1094,10 +1228,11 @@
                 } else {
                     activateSection('dashboard');
                 }
-                loadUserOrders(user.uid);
+                loadUserOrdersFromFirestore(user.uid);
                 loadShippingAddressesFromFirestore(user.uid);
                 loadCartFromFirestore(user.uid);
                 loadFavoritesFromFirestore(user.uid);
+                loadLoyaltyPoints(user.uid);
             }
         }
 
@@ -1107,12 +1242,14 @@
             const shop = document.getElementById('shopSection');
             const cart = document.getElementById('cartSection');
             const favorites = document.getElementById('favoritesSection');
+            const orders = document.getElementById('ordersSection');
 
             if (dashboard) dashboard.classList.toggle('hidden', section !== 'dashboard');
             if (settings) settings.classList.toggle('hidden', section !== 'settings');
             if (shop) shop.classList.toggle('hidden', section !== 'shop');
             if (cart) cart.classList.toggle('hidden', section !== 'cart');
             if (favorites) favorites.classList.toggle('hidden', section !== 'favorites');
+            if (orders) orders.classList.toggle('hidden', section !== 'orders');
 
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.getElementById(section + 'Link');
@@ -1857,17 +1994,20 @@
                     createdAt: window.serverTimestamp ? window.serverTimestamp() : new Date()
                 });
 
-                // update local orders list for dashboard table (existing mechanism)
-                const orders = getOrders();
-                orders.unshift({
-                    id: '#' + orderId.slice(-6).toUpperCase(),
-                    date: new Date().toISOString().slice(0, 10),
-                    item: items[0]?.name ? `${items[0].name}${items.length > 1 ? ` +${items.length - 1}` : ''}` : 'طلب جديد',
-                    status: 'pending',
-                    price: formatEGP(totals.total)
-                });
-                saveOrders(orders);
-                loadUserOrders(currentUid);
+                // loyalty +50
+                try {
+                    if (window.updateDoc && window.increment) {
+                        await window.updateDoc(window.doc(window.db, 'users', currentUid), {
+                            loyaltyPoints: window.increment(50)
+                        });
+                        loadLoyaltyPoints(currentUid);
+                    }
+                } catch (lpErr) {
+                    console.error('loyaltyPoints increment:', lpErr);
+                }
+
+                // refresh orders UI from Firestore
+                loadUserOrdersFromFirestore(currentUid);
 
                 showToast('تم تأكيد الطلب بنجاح ✓', false);
                 clearCart();
@@ -1875,6 +2015,24 @@
             } catch (e) {
                 console.error('createOrderInFirestore:', e);
                 showToast('فشل إنشاء الطلب. تأكد من Firestore Rules.', true);
+            }
+        }
+
+        async function loadLoyaltyPoints(uid) {
+            const el = document.getElementById('loyaltyPoints');
+            if (!el) return;
+            el.textContent = '0';
+            if (!uid) return;
+            if (!window.db || !window.doc || !window.getDoc) return;
+            try {
+                const snap = await window.getDoc(window.doc(window.db, 'users', uid));
+                if (snap.exists()) {
+                    const d = snap.data() || {};
+                    const points = Number(d.loyaltyPoints || 0);
+                    el.textContent = String(points);
+                }
+            } catch (e) {
+                console.error('loadLoyaltyPoints:', e);
             }
         }
     </script>

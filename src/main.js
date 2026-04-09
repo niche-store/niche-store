@@ -19,7 +19,15 @@ import {
   doc,
   setDoc,
   getDoc,
-  serverTimestamp
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  updateDoc,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAjH6JBRtesJH9vLuHzYTxL4iakHVazzgE",
@@ -40,6 +48,14 @@ window.doc = doc;
 window.setDoc = setDoc;
 window.getDoc = getDoc;
 window.serverTimestamp = serverTimestamp;
+window.collection = collection;
+window.query = query;
+window.where = where;
+window.orderBy = orderBy;
+window.limit = limit;
+window.getDocs = getDocs;
+window.updateDoc = updateDoc;
+window.increment = increment;
 
 // 👇 أهم خطوة (عشان HTML يشوفهم)
 window.auth = auth;
