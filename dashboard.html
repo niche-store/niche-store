@@ -668,12 +668,22 @@
                 <input type="hidden" id="shippingId">
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">اسم العنوان</label>
-                    <div class="select-wrap">
-                        <select id="shippingLabel" required>
-                            <option value="" disabled selected>اختر</option>
-                            <option value="المنزل">المنزل</option>
-                            <option value="العمل">العمل</option>
-                        </select>
+                    <input type="hidden" id="shippingLabel" value="">
+                    <div id="shippingLabelPicker" class="grid grid-cols-2 gap-3 mt-2">
+                        <button type="button"
+                                data-value="المنزل"
+                                onclick="pickShippingLabel('المنزل')"
+                                class="border border-gray-200 bg-white text-black rounded-2xl px-4 py-4 font-black text-sm flex items-center justify-center gap-2 hover:bg-gray-100 transition">
+                            <i class="fas fa-house text-gray-500"></i>
+                            <span>المنزل</span>
+                        </button>
+                        <button type="button"
+                                data-value="العمل"
+                                onclick="pickShippingLabel('العمل')"
+                                class="border border-gray-200 bg-white text-black rounded-2xl px-4 py-4 font-black text-sm flex items-center justify-center gap-2 hover:bg-gray-100 transition">
+                            <i class="fas fa-briefcase text-gray-500"></i>
+                            <span>العمل</span>
+                        </button>
                     </div>
                 </div>
 
@@ -1273,6 +1283,7 @@
             const phoneEl = document.getElementById('shippingPhone');
             if (idEl) idEl.value = '';
             if (labelEl) labelEl.value = '';
+            pickShippingLabel('');
             if (cityEl) cityEl.value = '';
             if (districtEl) districtEl.value = '';
             if (streetEl) streetEl.value = '';
@@ -1287,6 +1298,7 @@
             if (!a) return;
             document.getElementById('shippingId').value = a.id || '';
             document.getElementById('shippingLabel').value = a.label || '';
+            pickShippingLabel(a.label || '');
             document.getElementById('shippingCity').value = a.city || '';
             document.getElementById('shippingDistrict').value = a.district || '';
             document.getElementById('shippingStreet').value = a.street || '';
@@ -1294,6 +1306,32 @@
             document.getElementById('shippingLandmark').value = a.landmark || '';
             document.getElementById('shippingPhone').value = a.phone || '';
             toggleModal('shippingModal');
+        }
+
+        function pickShippingLabel(value) {
+            const next = (value || '').trim();
+            const labelEl = document.getElementById('shippingLabel');
+            if (labelEl) labelEl.value = next;
+
+            const picker = document.getElementById('shippingLabelPicker');
+            if (!picker) return;
+
+            const buttons = picker.querySelectorAll('button[data-value]');
+            buttons.forEach((btn) => {
+                const v = btn.getAttribute('data-value') || '';
+                const active = next && v === next;
+                btn.classList.toggle('bg-black', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('border-black', active);
+                btn.classList.toggle('bg-white', !active);
+                btn.classList.toggle('text-black', !active);
+                btn.classList.toggle('border-gray-200', !active);
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.classList.toggle('text-white', active);
+                    icon.classList.toggle('text-gray-500', !active);
+                }
+            });
         }
 
         // Handle Shipping Address Form
@@ -1696,10 +1734,88 @@
         }
 
         // --- Cart (qty-based) ---
+        // cartItems keyed by `${productId}::${size}` (size = '' for accessories/no-size)
         let cartItems = {};
         let cartSyncTimer = null;
         let cartSyncEnabled = false;
         let currentUid = null;
+        // keeps current size selection per product card
+        const selectedSizeByProductId = {};
+
+        const CLOTHES_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+        const SHOES_SIZES = Array.from({ length: 10 }, (_, i) => String(36 + i)); // 36..45
+
+        function normalizeSize(size) {
+            return (size == null ? '' : String(size)).trim();
+        }
+
+        function makeCartKey(productId, size) {
+            return `${productId}::${normalizeSize(size)}`;
+        }
+
+        function isClothesCategory(category) {
+            return category === 'men_clothes' || category === 'women_clothes' || category === 'kids';
+        }
+
+        function isShoesCategory(category) {
+            return category === 'shoes';
+        }
+
+        function getSizeOptionsForCategory(category) {
+            if (isClothesCategory(category)) return CLOTHES_SIZES;
+            if (isShoesCategory(category)) return SHOES_SIZES;
+            return null; // accessories: no size
+        }
+
+        function requiresSize(category) {
+            return isClothesCategory(category) || isShoesCategory(category);
+        }
+
+        function getSelectedSizeForProduct(productId) {
+            return normalizeSize(selectedSizeByProductId[productId] || '');
+        }
+
+        function setSelectedSizeForProduct(productId, size) {
+            selectedSizeByProductId[productId] = normalizeSize(size);
+        }
+
+        function getTotalQtyByProductId(productId) {
+            return Object.values(cartItems).reduce((sum, it) => {
+                if (it?.productSnapshot?.id === productId) return sum + (Number(it.qty) || 0);
+                return sum;
+            }, 0);
+        }
+
+        function selectProductSize(productId, size) {
+            setSelectedSizeForProduct(productId, size);
+            renderShopProducts(getFilteredProducts());
+            renderFavoritesSection();
+        }
+
+        function renderSizePicker(productId, category) {
+            const options = getSizeOptionsForCategory(category);
+            if (!options) return '';
+            const selected = getSelectedSizeForProduct(productId);
+            const label = isShoesCategory(category) ? 'اختر مقاس الحذاء' : 'اختر المقاس';
+            return `
+                <div class="mt-4">
+                    <div class="text-xs text-gray-500 font-black mb-2">${label}</div>
+                    <div class="flex flex-wrap gap-2">
+                        ${options.map((s) => {
+                            const active = selected === s;
+                            return `
+                                <button type="button"
+                                        class="${active ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-200 hover:bg-gray-100'} w-11 h-11 rounded-full border font-black text-xs transition"
+                                        onclick="selectProductSize('${productId}', '${s}')"
+                                        aria-pressed="${active ? 'true' : 'false'}">
+                                    ${s}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
         function generateDocId(prefix = 'id') {
             try {
@@ -1715,10 +1831,11 @@
         }
 
         function serializeCartItemsForFirestore() {
-            const items = Object.entries(cartItems).map(([productId, it]) => {
+            const items = Object.entries(cartItems).map(([key, it]) => {
                 const p = it.productSnapshot || {};
                 return {
-                    productId,
+                    productId: p.id || String(key).split('::')[0],
+                    size: normalizeSize(it.size),
                     qty: it.qty || 0,
                     name: p.name || '',
                     price: p.price || 0,
@@ -1733,14 +1850,18 @@
             const next = {};
             (itemsArray || []).forEach((it) => {
                 if (!it || !it.productId || !it.qty) return;
-                next[it.productId] = {
+                const size = normalizeSize(it.size);
+                const key = makeCartKey(it.productId, size);
+                next[key] = {
                     qty: Number(it.qty) || 0,
+                    size,
                     productSnapshot: {
                         id: it.productId,
                         name: it.name || '',
                         price: Number(it.price) || 0,
                         image: it.image || '',
-                        category: it.category || ''
+                        category: it.category || '',
+                        size
                     }
                 };
             });
@@ -1895,20 +2016,21 @@
                             <p class="text-gray-500 text-sm font-medium mb-2">كود: ${p.id}</p>
                             <p class="text-gray-500 text-sm font-bold mb-2">التصنيف: ${categoryLabels[p.category] || p.category}</p>
                             <p class="text-xl font-black">${p.price.toLocaleString('ar-EG')} ج.م</p>
+                            ${renderSizePicker(p.id, p.category)}
                         </div>
                         <div class="mt-4 flex items-center justify-between gap-3">
                             <button type="button"
                                     class="bg-black text-white w-12 h-12 rounded-xl font-black text-xl hover:bg-gray-900 transition"
-                                    onclick="addToCart('${p.id}')">+</button>
+                                    onclick="addToCartFromProductCard('${p.id}')">+</button>
 
                             <div class="flex-1 text-center">
                                 <p class="text-xs text-gray-500 font-bold mb-1">الكمية في السلة</p>
-                                <p class="text-2xl font-black">${cartItems[p.id]?.qty || 0}</p>
+                                <p class="text-2xl font-black">${getTotalQtyByProductId(p.id) || 0}</p>
                             </div>
 
                             <button type="button"
                                     class="bg-white border border-gray-200 text-black w-12 h-12 rounded-xl font-black text-xl hover:bg-gray-100 transition"
-                                    onclick="removeFromCart('${p.id}')">-</button>
+                                    onclick="removeFromCartFromProductCard('${p.id}')">-</button>
                         </div>
                     </div>
                 </div>
@@ -1940,21 +2062,25 @@
             return shopProducts.find((p) => p.id === productId) || null;
         }
 
-        function setQty(productId, nextQty) {
+        function setQty(productId, size, nextQty) {
             const qty = Math.max(0, Number(nextQty || 0));
-            if (qty === 0) {
-                delete cartItems[productId];
-            } else {
-                const p = getProductById(productId);
-                if (!p) return;
-                cartItems[productId] = {
+            const p = getProductById(productId);
+            if (!p) return;
+            const normalizedSize = normalizeSize(size);
+            const key = makeCartKey(productId, normalizedSize);
+
+            if (qty === 0) delete cartItems[key];
+            else {
+                cartItems[key] = {
                     qty,
+                    size: normalizedSize,
                     productSnapshot: {
                         id: p.id,
                         name: p.name,
                         price: p.price,
                         image: p.image,
-                        category: p.category
+                        category: p.category,
+                        size: normalizedSize
                     }
                 };
             }
@@ -1964,16 +2090,44 @@
             scheduleCartSync();
         }
 
-        function addToCart(productId) {
-            const current = cartItems[productId]?.qty || 0;
-            setQty(productId, current + 1);
+        function addToCartVariant(productId, size) {
+            const key = makeCartKey(productId, size);
+            const current = cartItems[key]?.qty || 0;
+            setQty(productId, size, current + 1);
             showToast('تم إضافة المنتج إلى السلة', false);
         }
 
-        function removeFromCart(productId) {
-            const current = cartItems[productId]?.qty || 0;
+        function removeFromCartVariant(productId, size) {
+            const key = makeCartKey(productId, size);
+            const current = cartItems[key]?.qty || 0;
             if (current <= 0) return;
-            setQty(productId, current - 1);
+            setQty(productId, size, current - 1);
+        }
+
+        function addToCartFromProductCard(productId) {
+            const p = getProductById(productId);
+            if (!p) return;
+            const options = getSizeOptionsForCategory(p.category);
+            const need = requiresSize(p.category);
+            const selected = getSelectedSizeForProduct(productId);
+            if (need && (!selected || !(options || []).includes(selected))) {
+                showToast('اختر المقاس أولاً.', true);
+                return;
+            }
+            addToCartVariant(productId, need ? selected : '');
+        }
+
+        function removeFromCartFromProductCard(productId) {
+            const p = getProductById(productId);
+            if (!p) return;
+            const options = getSizeOptionsForCategory(p.category);
+            const need = requiresSize(p.category);
+            const selected = getSelectedSizeForProduct(productId);
+            if (need && (!selected || !(options || []).includes(selected))) {
+                showToast('اختر المقاس أولاً.', true);
+                return;
+            }
+            removeFromCartVariant(productId, need ? selected : '');
         }
 
         function getCartTotals() {
@@ -1999,6 +2153,7 @@
                 tbody.innerHTML = items.map((it) => {
                     const p = it.productSnapshot;
                     const qty = it.qty || 0;
+                    const size = normalizeSize(it.size);
                     const lineTotal = qty * (p?.price || 0);
                     return `
                         <tr class="border-b hover:bg-gray-50 transition align-top">
@@ -2011,15 +2166,16 @@
                                         <div class="font-black">${p?.name || ''}</div>
                                         <div class="text-xs text-gray-400 font-bold">كود: ${p?.id || ''}</div>
                                         <div class="text-xs text-gray-400 font-bold">تصنيف: ${categoryLabels[p?.category] || p?.category || ''}</div>
+                                        ${size ? `<div class="text-xs text-gray-400 font-bold">المقاس: <span class="text-gray-700 font-black">${size}</span></div>` : ''}
                                     </div>
                                 </div>
                             </td>
                             <td class="py-4">${formatEGP(p?.price || 0)}</td>
                             <td class="py-4">
                                 <div class="inline-flex items-center gap-2">
-                                    <button type="button" class="bg-black text-white w-10 h-10 rounded-xl font-black text-lg hover:bg-gray-900 transition" onclick="addToCart('${p?.id}')">+</button>
+                                    <button type="button" class="bg-black text-white w-10 h-10 rounded-xl font-black text-lg hover:bg-gray-900 transition" onclick="addToCartVariant('${p?.id}', '${size}')">+</button>
                                     <span class="min-w-[36px] text-center font-black">${qty}</span>
-                                    <button type="button" class="bg-white border border-gray-200 text-black w-10 h-10 rounded-xl font-black text-lg hover:bg-gray-100 transition" onclick="removeFromCart('${p?.id}')">-</button>
+                                    <button type="button" class="bg-white border border-gray-200 text-black w-10 h-10 rounded-xl font-black text-lg hover:bg-gray-100 transition" onclick="removeFromCartVariant('${p?.id}', '${size}')">-</button>
                                 </div>
                             </td>
                             <td class="py-4 font-black">${formatEGP(lineTotal)}</td>
@@ -2169,20 +2325,21 @@
                             <p class="text-gray-500 text-sm font-medium mb-2">كود: ${p.id}</p>
                             <p class="text-gray-500 text-sm font-bold mb-2">التصنيف: ${categoryLabels[p.category] || p.category}</p>
                             <p class="text-xl font-black">${p.price.toLocaleString('ar-EG')} ج.م</p>
+                            ${renderSizePicker(p.id, p.category)}
                         </div>
                         <div class="mt-4 flex items-center justify-between gap-3">
                             <button type="button"
                                     class="bg-black text-white w-12 h-12 rounded-xl font-black text-xl hover:bg-gray-900 transition"
-                                    onclick="addToCart('${p.id}')">+</button>
+                                    onclick="addToCartFromProductCard('${p.id}')">+</button>
 
                             <div class="flex-1 text-center">
                                 <p class="text-xs text-gray-500 font-bold mb-1">الكمية في السلة</p>
-                                <p class="text-2xl font-black">${cartItems[p.id]?.qty || 0}</p>
+                                <p class="text-2xl font-black">${getTotalQtyByProductId(p.id) || 0}</p>
                             </div>
 
                             <button type="button"
                                     class="bg-white border border-gray-200 text-black w-12 h-12 rounded-xl font-black text-xl hover:bg-gray-100 transition"
-                                    onclick="removeFromCart('${p.id}')">-</button>
+                                    onclick="removeFromCartFromProductCard('${p.id}')">-</button>
                         </div>
                     </div>
                 </div>
