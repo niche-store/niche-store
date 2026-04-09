@@ -697,6 +697,7 @@ if (!emailPattern.test(emailValue)) {
         await window.sendEmailVerification(userCredential.user);
 
         showToast("تم إرسال رابط التحقق على بريدك 📩 شيّك في SPAM", false);
+        await window.auth.signOut();
         toggleModal('authModal');
 
     } catch (error) {
@@ -818,9 +819,8 @@ if (!userCredential.user.emailVerified) {
     await window.auth.signOut();
     return;
 }
-showToast("تم تسجيل الدخول بنجاح 🎉", false);
+sessionStorage.setItem('nicheLoginToast', 'تم تسجيل الدخول بنجاح');
 toggleModal('authModal');
-// بعد نجاح تسجيل الدخول
 window.location.href = "dashboard.html";
     } catch (error) {
         let msg = "يرجي التأكد من صحة البيانات";
@@ -846,7 +846,7 @@ async function handleGoogleLogin() {
 
         const result = await window.signInWithPopup(window.auth, provider);
 
-        showToast("تم تسجيل الدخول بجوجل 🎉", false);
+        sessionStorage.setItem('nicheLoginToast', 'تم تسجيل الدخول بجوجل');
         toggleModal('authModal');
         window.location.href = "dashboard.html";
 

@@ -689,8 +689,8 @@
                     await window.auth.signOut();
                     return;
                 }
-                showToast("تم تسجيل الدخول بنجاح 🎉", false);
                 toggleModal('authModal');
+                sessionStorage.setItem('nicheLoginToast', 'تم تسجيل الدخول بنجاح');
                 window.location.href = "dashboard.html";
             } catch (error) {
                 let msg = "يرجي التأكد من صحة البيانات";
@@ -709,8 +709,8 @@
             try {
                 const provider = new window.GoogleAuthProvider();
                 await window.signInWithPopup(window.auth, provider);
-                showToast("تم تسجيل الدخول بجوجل 🎉", false);
                 toggleModal('authModal');
+                sessionStorage.setItem('nicheLoginToast', 'تم تسجيل الدخول بجوجل');
                 window.location.href = "dashboard.html";
             } catch (error) {
                 if (error.code === 'auth/popup-closed-by-user') return;

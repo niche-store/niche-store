@@ -896,6 +896,16 @@
 
                 totalOrdersEl.textContent = orders.length;
 
+                // Auto-award loyalty points when you (admin) set status=completed in Firebase.
+                // This is idempotent via order.loyaltyDeliveredApplied flag.
+                for (const o of orders) {
+                    if (o.status === 'completed' && o.loyaltyDeliveredApplied !== true) {
+                        window.applyDeliveryPointsOnce?.(uid, o.id)
+                            ?.then(() => loadLoyaltyPoints(uid))
+                            ?.catch((e) => console.error('applyDeliveryPointsOnce:', e));
+                    }
+                }
+
                 // Latest orders (top 8)
                 const latest = orders.slice(0, 8);
                 if (!latest.length) {
@@ -941,17 +951,9 @@
                                     <td class="py-4">${date}</td>
                                     <td class="py-4">${itemsLabel}</td>
                                     <td class="py-4">
-                                        <div class="flex items-center gap-3">
-                                            <span class="status-badge ${getStatusBadgeClass(o.status)}">
-                                                ${getStatusLabel(o.status)}
-                                            </span>
-                                            <select class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-black"
-                                                    onchange="updateOrderStatus('${o.id}', this.value)">
-                                                <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>قيد المعالجة</option>
-                                                <option value="shipping" ${o.status === 'shipping' ? 'selected' : ''}>جاري الشحن</option>
-                                                <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>تم التوصيل</option>
-                                            </select>
-                                        </div>
+                                        <span class="status-badge ${getStatusBadgeClass(o.status)}">
+                                            ${getStatusLabel(o.status)}
+                                        </span>
                                     </td>
                                     <td class="py-4">${formatEGP(total)}</td>
                                     <td class="py-4">
@@ -972,43 +974,18 @@
             }
         }
 
-        async function updateOrderStatus(orderId, nextStatus) {
-            if (!currentUid) {
-                showToast('يجب تسجيل الدخول.', true);
-                return;
-            }
-            if (!orderId) return;
-            const allowed = ['pending', 'shipping', 'completed'];
-            if (!allowed.includes(nextStatus)) return;
-            if (!window.db || !window.doc || !window.updateDoc) {
-                showToast('Firestore غير جاهز.', true);
-                return;
-            }
-            try {
-                await window.updateDoc(window.doc(window.db, 'orders', orderId), {
-                    status: nextStatus
-                });
-                showToast('تم تحديث حالة الطلب.', false);
-                loadUserOrdersFromFirestore(currentUid);
-            } catch (e) {
-                console.error('updateOrderStatus:', e);
-                showToast('فشل تحديث الحالة. تأكد من Rules.', true);
-                loadUserOrdersFromFirestore(currentUid);
-            }
-        }
-
         async function cancelOrder(orderId) {
             if (!currentUid) {
                 showToast('يجب تسجيل الدخول.', true);
                 return;
             }
             if (!orderId) return;
-            if (!window.cancelOrderAndDeductPoints) {
+            if (!window.cancelOrder) {
                 showToast('Firestore غير جاهز.', true);
                 return;
             }
             try {
-                await window.cancelOrderAndDeductPoints(currentUid, orderId);
+                await window.cancelOrder(currentUid, orderId);
 
                 showToast('تم إلغاء الطلب.', false);
                 loadUserOrdersFromFirestore(currentUid);
@@ -1251,6 +1228,13 @@
                 window.location.href = 'index.html';
             } else {
                 showPage();
+                try {
+                    const msg = sessionStorage.getItem('nicheLoginToast');
+                    if (msg) {
+                        sessionStorage.removeItem('nicheLoginToast');
+                        showToast(msg + ' ✓', false);
+                    }
+                } catch (_) {}
                 currentUid = user.uid;
                 cartSyncEnabled = true;
                 const userName = user.displayName || user.email.split('@')[0];
@@ -2019,7 +2003,7 @@
 
             try {
                 const items = serializeCartItemsForFirestore();
-                const orderId = await window.createOrderAndAwardPoints(currentUid, {
+                const orderId = await window.createOrder(currentUid, {
                     items,
                     totals: {
                         itemsCount: totals.itemsCount,
@@ -2037,6 +2021,7 @@
 
                 // refresh orders + points UI from Firestore
                 loadUserOrdersFromFirestore(currentUid);
+                // loyaltyPoints will increase automatically when status becomes completed (in Firebase)
                 loadLoyaltyPoints(currentUid);
 
                 showToast('تم تأكيد الطلب بنجاح ✓', false);
