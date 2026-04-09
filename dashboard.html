@@ -73,7 +73,7 @@
         select {
             width: 100%;
             padding: 16px 22px;
-            padding-left: 52px; /* space for the chevron in RTL */
+            padding-left: 54px; /* space for the chevron in RTL */
             background: #f8f9fa !important;
             border: 2px solid transparent !important;
             border-radius: 18px;
@@ -81,16 +81,32 @@
             transition: 0.3s;
             font-weight: 700;
             -webkit-appearance: none;
+            -moz-appearance: none;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M6 8l4 4 4-4' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: 18px 50%;
+            cursor: pointer;
         }
         select:focus {
             border-color: #000 !important;
             background: #fff !important;
             box-shadow: 0 8px 25px rgba(0,0,0,0.05);
         }
+        .select-wrap {
+            position: relative;
+        }
+        .select-wrap::after {
+            content: "";
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translateY(-50%);
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M6 8l4 4 4-4' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .select-wrap select:focus + .select-focus-ring { display: none; }
 
         .btn-action {
             background: #000; color: #fff; width: 100%; padding: 18px;
@@ -652,11 +668,13 @@
                 <input type="hidden" id="shippingId">
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">اسم العنوان</label>
-                    <select id="shippingLabel" required>
-                        <option value="" disabled selected>اختر</option>
-                        <option value="المنزل">المنزل</option>
-                        <option value="العمل">العمل</option>
-                    </select>
+                    <div class="select-wrap">
+                        <select id="shippingLabel" required>
+                            <option value="" disabled selected>اختر</option>
+                            <option value="المنزل">المنزل</option>
+                            <option value="العمل">العمل</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -753,6 +771,11 @@
                         <li class="flex items-center gap-3"><i class="fas fa-map-marker-alt text-gray-300"></i> الدقهلية، مصر</li>
                         <li class="flex items-center gap-3"><i class="fas fa-phone-alt text-gray-300"></i> +201508791191</li>
                         <li class="flex items-center gap-3"><i class="fas fa-envelope text-gray-300"></i> niche.store.support.for.help@gmail.com</li>
+                        <li>
+                            <a href="contact.html#contactForm" class="inline-flex items-center justify-center w-full bg-white text-black py-3 px-4 rounded-xl font-black text-sm hover:bg-gray-200 transition-all">
+                                أو ارسل لنا رسالة الآن
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -1046,7 +1069,7 @@
                                     <td class="py-4">${formatEGP(total)}</td>
                                     <td class="py-4">
                                         ${canCancel
-                                            ? `<button type="button" onclick="cancelOrder('${o.id}')" class="bg-white border border-gray-200 text-red-600 px-4 py-2 rounded-xl font-black text-xs hover:bg-red-50 transition">إلغاء</button>`
+                                            ? `<button type="button" onclick="cancelOrderRequest('${o.id}')" class="bg-white border border-gray-200 text-red-600 px-4 py-2 rounded-xl font-black text-xs hover:bg-red-50 transition">إلغاء</button>`
                                             : `<span class="text-gray-400 text-xs font-bold">—</span>`
                                         }
                                     </td>
@@ -1131,7 +1154,7 @@
                                 <td class="py-4">${formatEGP(total)}</td>
                                 <td class="py-4">
                                     ${canCancel
-                                        ? `<button type="button" onclick="cancelOrder('${o.id}')" class="bg-white border border-gray-200 text-red-600 px-4 py-2 rounded-xl font-black text-xs hover:bg-red-50 transition">إلغاء</button>`
+                                        ? `<button type="button" onclick="cancelOrderRequest('${o.id}')" class="bg-white border border-gray-200 text-red-600 px-4 py-2 rounded-xl font-black text-xs hover:bg-red-50 transition">إلغاء</button>`
                                         : `<span class="text-gray-400 text-xs font-bold">—</span>`
                                     }
                                 </td>
@@ -1170,7 +1193,7 @@
             );
         }
 
-        async function cancelOrder(orderId) {
+        async function cancelOrderRequest(orderId) {
             if (!currentUid) {
                 showToast('يجب تسجيل الدخول.', true);
                 return;
