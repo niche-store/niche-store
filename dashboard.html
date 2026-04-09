@@ -108,6 +108,30 @@
         }
         .select-wrap select:focus + .select-focus-ring { display: none; }
 
+        /* Compact, modern dropdown for size picker inside product cards */
+        .size-select {
+            width: 100%;
+            padding: 10px 14px;
+            padding-left: 44px; /* space for chevron in RTL */
+            border-radius: 14px;
+            border: 1px solid #e5e7eb !important;
+            background: #f9fafb !important;
+            font-weight: 900;
+            font-size: 13px;
+            line-height: 1.2;
+        }
+        .size-select:focus {
+            border-color: #000 !important;
+            background: #fff !important;
+            box-shadow: 0 10px 26px rgba(0,0,0,0.08);
+        }
+        .select-wrap.size-select-wrap::after {
+            left: 14px;
+            width: 18px;
+            height: 18px;
+            opacity: 0.85;
+        }
+
         .btn-action {
             background: #000; color: #fff; width: 100%; padding: 18px;
             border-radius: 18px; font-weight: 900; font-size: 18px;
@@ -1799,11 +1823,14 @@
             const label = isShoesCategory(category) ? 'اختر مقاس الحذاء' : 'اختر المقاس';
             return `
                 <div class="mt-4">
-                    <div class="text-xs text-gray-500 font-black mb-2">${label}</div>
-                    <div class="select-wrap">
-                        <select
-                            class="w-full"
-                            onchange="selectProductSize('${productId}', this.value)">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <div class="text-xs text-gray-500 font-black">${label}</div>
+                        ${selected ? `<div class="text-[11px] font-black bg-black text-white px-2 py-1 rounded-full">تم الاختيار: ${selected}</div>` : ''}
+                    </div>
+                    <div class="select-wrap size-select-wrap">
+                        <select class="size-select"
+                                aria-label="${label}"
+                                onchange="selectProductSize('${productId}', this.value)">
                             <option value="" ${selected ? '' : 'selected'} disabled>اختر المقاس</option>
                             ${options.map((s) => `
                                 <option value="${s}" ${selected === s ? 'selected' : ''}>${s}</option>
