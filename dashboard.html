@@ -278,7 +278,7 @@
                 <a href="#" id="shopLink" onclick="activateSection('shop'); return false;" class="sidebar-link"><i class="fas fa-shopping-bag"></i> اطلب منتجات</a>
                 <a href="#" id="cartLink" onclick="activateSection('cart'); return false;" class="sidebar-link"><i class="fas fa-shopping-cart"></i> السلة</a>
                 <a href="#" class="sidebar-link"><i class="fas fa-box"></i> طلباتي</a>
-                <a href="#" class="sidebar-link"><i class="fas fa-heart"></i> المفضلة</a>
+                <a href="#" id="favoritesLink" onclick="activateSection('favorites'); return false;" class="sidebar-link"><i class="fas fa-heart"></i> المفضلة</a>
                 <a href="#" id="settingsLink" onclick="activateSection('settings'); return false;" class="sidebar-link"><i class="fas fa-user-cog"></i> إعدادات الحساب</a>
             </div>
 
@@ -357,8 +357,7 @@
                     <div class="dashboard-card">
                         <h2 class="text-lg font-black mb-4"><i class="fas fa-map-marker-alt ml-2"></i> عنوان الشحن</h2>
                         <div id="shippingAddressDisplay" class="space-y-2">
-                            <p class="text-gray-500 text-sm">لم تقم بإضافة عنوان بعد.</p>
-                            <button onclick="toggleModal('shippingModal')" class="text-blue-600 text-sm font-bold underline">إضافة عنوان</button>
+                            <!-- يتم ملؤه ديناميكياً من Firestore -->
                         </div>
                     </div>
                 </div>
@@ -559,6 +558,24 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="favoritesSection" class="space-y-8 hidden">
+                    <div class="dashboard-card">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-xl font-black">المفضلة</h2>
+                                <p class="text-gray-500 text-sm mt-2">كل المنتجات التي قمت بتفضيلها.</p>
+                            </div>
+                            <button type="button" onclick="activateSection('shop'); return false;" class="bg-white border border-gray-200 text-black px-5 py-3 rounded-xl font-black text-sm hover:bg-gray-100 transition">
+                                استعرض المنتجات
+                            </button>
+                        </div>
+
+                        <div id="favoritesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- يتم توليده من JS -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -574,6 +591,12 @@
             </div>
 
             <form onsubmit="handleAddShippingAddress(event)" novalidate>
+                <input type="hidden" id="shippingId">
+                <div class="mb-4">
+                    <label class="text-[12px] font-black uppercase mb-1 block mr-1">اسم العنوان</label>
+                    <input type="text" id="shippingLabel" placeholder="مثال: المنزل / العمل" required>
+                </div>
+
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">المحافظة</label>
                     <input type="text" id="shippingCity" placeholder="مثال: القاهرة" required>
@@ -737,13 +760,61 @@
             localStorage.setItem('userOrders', JSON.stringify(orders));
         }
 
-        function getShippingAddress() {
+        // --- Shipping addresses (multi + default) ---
+        let shippingAddressesState = { defaultId: '', items: [] };
+
+        function getShippingAddressFallbackFromLocalStorage() {
             const address = localStorage.getItem('userShippingAddress');
             return address ? JSON.parse(address) : null;
         }
 
-        function saveShippingAddress(address) {
+        function saveShippingAddressFallbackToLocalStorage(address) {
             localStorage.setItem('userShippingAddress', JSON.stringify(address));
+        }
+
+        function getDefaultShippingAddress() {
+            const items = shippingAddressesState.items || [];
+            const defaultId = shippingAddressesState.defaultId || '';
+            const def = items.find((a) => a.id === defaultId) || null;
+            if (def) return def;
+            return items.length ? items[0] : getShippingAddressFallbackFromLocalStorage();
+        }
+
+        function getShippingDocRef(uid) {
+            return window.doc(window.db, 'shippingAddresses', uid);
+        }
+
+        async function loadShippingAddressesFromFirestore(uid) {
+            if (!uid) return;
+            if (!window.db || !window.doc || !window.getDoc) return;
+            try {
+                const snap = await window.getDoc(getShippingDocRef(uid));
+                if (snap.exists()) {
+                    const d = snap.data() || {};
+                    shippingAddressesState = {
+                        defaultId: d.defaultId || '',
+                        items: Array.isArray(d.items) ? d.items : []
+                    };
+                } else {
+                    shippingAddressesState = { defaultId: '', items: [] };
+                }
+            } catch (e) {
+                console.error('loadShippingAddressesFromFirestore:', e);
+                shippingAddressesState = { defaultId: '', items: [] };
+            }
+            renderShippingAddressesUI();
+            renderCartShippingSummary();
+        }
+
+        async function saveShippingAddressesToFirestore(uid) {
+            if (!uid) return;
+            if (!window.db || !window.doc || !window.setDoc) return;
+            await window.setDoc(getShippingDocRef(uid), {
+                userId: uid,
+                defaultId: shippingAddressesState.defaultId || '',
+                items: shippingAddressesState.items || [],
+                updatedAt: window.serverTimestamp ? window.serverTimestamp() : new Date()
+            }, { merge: true });
         }
 
         // Load Orders Function
@@ -772,29 +843,89 @@
             `).join('');
         }
 
-        // Load Shipping Address
-        function loadShippingAddress() {
-            const address = getShippingAddress();
+        function renderShippingAddressesUI() {
             const display = document.getElementById('shippingAddressDisplay');
-            
-            if (address) {
+            if (!display) return;
+
+            const items = shippingAddressesState.items || [];
+            const defaultId = shippingAddressesState.defaultId || '';
+
+            if (!items.length) {
                 display.innerHTML = `
-                    <div class="space-y-2">
-                        <p class="text-gray-700"><strong>المحافظة:</strong> ${address.city}</p>
-                        <p class="text-gray-700"><strong>المنطقة:</strong> ${address.district}</p>
-                        <p class="text-gray-700"><strong>الشارع:</strong> ${address.street}</p>
-                        <p class="text-gray-700"><strong>رقم المبنى:</strong> ${address.building}</p>
-                        <p class="text-gray-700"><strong>الهاتف:</strong> ${address.phone}</p>
-                        <button onclick="toggleModal('shippingModal')" class="text-blue-600 text-sm font-bold underline mt-4">تعديل العنوان</button>
-                    </div>
+                    <p class="text-gray-500 text-sm">لم تقم بإضافة عنوان بعد.</p>
+                    <button onclick="openAddShippingModal()" class="text-blue-600 text-sm font-bold underline">إضافة عنوان</button>
                 `;
+                return;
             }
+
+            display.innerHTML = `
+                <div class="space-y-3">
+                    ${items.map((a) => `
+                        <div class="border border-gray-100 rounded-2xl p-4 bg-gray-50">
+                            <div class="flex justify-between items-start gap-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="font-black">${a.label || 'عنوان'}</span>
+                                        ${a.id === defaultId ? '<span class="text-[11px] font-black bg-black text-white px-2 py-1 rounded-full">افتراضي</span>' : ''}
+                                    </div>
+                                    <div class="text-sm font-bold text-gray-700 space-y-1">
+                                        <p><span class="text-gray-500">المحافظة:</span> ${a.city || ''}</p>
+                                        <p><span class="text-gray-500">المنطقة:</span> ${a.district || ''}</p>
+                                        <p><span class="text-gray-500">الشارع:</span> ${a.street || ''}</p>
+                                        <p><span class="text-gray-500">رقم المبنى:</span> ${a.building || ''}</p>
+                                        <p><span class="text-gray-500">الهاتف:</span> ${a.phone || ''}</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <button type="button" onclick="openEditShippingModal('${a.id}')" class="bg-white border border-gray-200 text-black px-4 py-2 rounded-xl font-black text-xs hover:bg-gray-100 transition">تعديل</button>
+                                    <button type="button" onclick="deleteShippingAddress('${a.id}')" class="bg-white border border-gray-200 text-red-600 px-4 py-2 rounded-xl font-black text-xs hover:bg-red-50 transition">حذف</button>
+                                    ${a.id === defaultId ? '' : `<button type="button" onclick="setDefaultShippingAddress('${a.id}')" class="bg-black text-white px-4 py-2 rounded-xl font-black text-xs hover:bg-gray-900 transition">اجعله افتراضي</button>`}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <button onclick="openAddShippingModal()" class="text-blue-600 text-sm font-bold underline">إضافة عنوان جديد</button>
+                </div>
+            `;
+        }
+
+        function openAddShippingModal() {
+            const idEl = document.getElementById('shippingId');
+            const labelEl = document.getElementById('shippingLabel');
+            const cityEl = document.getElementById('shippingCity');
+            const districtEl = document.getElementById('shippingDistrict');
+            const streetEl = document.getElementById('shippingStreet');
+            const buildingEl = document.getElementById('shippingBuilding');
+            const phoneEl = document.getElementById('shippingPhone');
+            if (idEl) idEl.value = '';
+            if (labelEl) labelEl.value = '';
+            if (cityEl) cityEl.value = '';
+            if (districtEl) districtEl.value = '';
+            if (streetEl) streetEl.value = '';
+            if (buildingEl) buildingEl.value = '';
+            if (phoneEl) phoneEl.value = '';
+            toggleModal('shippingModal');
+        }
+
+        function openEditShippingModal(addressId) {
+            const a = (shippingAddressesState.items || []).find((x) => x.id === addressId);
+            if (!a) return;
+            document.getElementById('shippingId').value = a.id || '';
+            document.getElementById('shippingLabel').value = a.label || '';
+            document.getElementById('shippingCity').value = a.city || '';
+            document.getElementById('shippingDistrict').value = a.district || '';
+            document.getElementById('shippingStreet').value = a.street || '';
+            document.getElementById('shippingBuilding').value = a.building || '';
+            document.getElementById('shippingPhone').value = a.phone || '';
+            toggleModal('shippingModal');
         }
 
         // Handle Shipping Address Form
         async function handleAddShippingAddress(event) {
             event.preventDefault();
 
+            const id = document.getElementById('shippingId')?.value?.trim() || '';
+            const label = document.getElementById('shippingLabel')?.value?.trim() || '';
             const city = document.getElementById('shippingCity').value.trim();
             const district = document.getElementById('shippingDistrict').value.trim();
             const street = document.getElementById('shippingStreet').value.trim();
@@ -805,7 +936,7 @@
             const loader = document.getElementById('shippingLoader');
             const text = document.getElementById('shippingText');
 
-            if (!city || !district || !street || !building || !phone) {
+            if (!label || !city || !district || !street || !building || !phone) {
                 showToast("يرجى ملء جميع الحقول", true);
                 return;
             }
@@ -815,14 +946,42 @@
             text.classList.add('hidden');
 
             try {
-                const address = { city, district, street, building, phone };
-                saveShippingAddress(address);
+                const addressId = id || generateDocId('addr');
+                const now = new Date();
+                const nextItem = {
+                    id: addressId,
+                    label,
+                    city,
+                    district,
+                    street,
+                    building,
+                    phone,
+                    updatedAt: now.toISOString()
+                };
+
+                const items = shippingAddressesState.items || [];
+                const idx = items.findIndex((x) => x.id === addressId);
+                if (idx >= 0) {
+                    items[idx] = { ...items[idx], ...nextItem };
+                } else {
+                    items.unshift({ ...nextItem, createdAt: now.toISOString() });
+                }
+                shippingAddressesState.items = items;
+                if (!shippingAddressesState.defaultId) {
+                    shippingAddressesState.defaultId = addressId;
+                }
+
+                // fallback local storage: keep default address in case Firestore isn't available
+                const def = getDefaultShippingAddress();
+                if (def) saveShippingAddressFallbackToLocalStorage(def);
+
+                if (currentUid) {
+                    await saveShippingAddressesToFirestore(currentUid);
+                }
                 showToast("تم حفظ العنوان بنجاح ✓", false);
                 toggleModal('shippingModal');
-                loadShippingAddress();
-                
-                // Reset form
-                document.querySelector('form').reset();
+                renderShippingAddressesUI();
+                renderCartShippingSummary();
             } catch (error) {
                 showToast("حدث خطأ ما، حاول مجدداً", true);
             }
@@ -830,6 +989,36 @@
             btn.disabled = false;
             loader.classList.add('hidden');
             text.classList.remove('hidden');
+        }
+
+        async function setDefaultShippingAddress(addressId) {
+            shippingAddressesState.defaultId = addressId;
+            const def = getDefaultShippingAddress();
+            if (def) saveShippingAddressFallbackToLocalStorage(def);
+            renderShippingAddressesUI();
+            renderCartShippingSummary();
+            try {
+                if (currentUid) await saveShippingAddressesToFirestore(currentUid);
+            } catch (e) {
+                console.error('setDefaultShippingAddress:', e);
+            }
+        }
+
+        async function deleteShippingAddress(addressId) {
+            const items = (shippingAddressesState.items || []).filter((a) => a.id !== addressId);
+            shippingAddressesState.items = items;
+            if (shippingAddressesState.defaultId === addressId) {
+                shippingAddressesState.defaultId = items[0]?.id || '';
+            }
+            const def = getDefaultShippingAddress();
+            if (def) saveShippingAddressFallbackToLocalStorage(def);
+            renderShippingAddressesUI();
+            renderCartShippingSummary();
+            try {
+                if (currentUid) await saveShippingAddressesToFirestore(currentUid);
+            } catch (e) {
+                console.error('deleteShippingAddress:', e);
+            }
         }
 
         // Logout Function
@@ -900,12 +1089,15 @@
                     activateSection('shop');
                 } else if (hash.startsWith('cart')) {
                     activateSection('cart');
+                } else if (hash.startsWith('favorites')) {
+                    activateSection('favorites');
                 } else {
                     activateSection('dashboard');
                 }
                 loadUserOrders(user.uid);
-                loadShippingAddress();
+                loadShippingAddressesFromFirestore(user.uid);
                 loadCartFromFirestore(user.uid);
+                loadFavoritesFromFirestore(user.uid);
             }
         }
 
@@ -914,11 +1106,13 @@
             const settings = document.getElementById('accountSettingsSection');
             const shop = document.getElementById('shopSection');
             const cart = document.getElementById('cartSection');
+            const favorites = document.getElementById('favoritesSection');
 
             if (dashboard) dashboard.classList.toggle('hidden', section !== 'dashboard');
             if (settings) settings.classList.toggle('hidden', section !== 'settings');
             if (shop) shop.classList.toggle('hidden', section !== 'shop');
             if (cart) cart.classList.toggle('hidden', section !== 'cart');
+            if (favorites) favorites.classList.toggle('hidden', section !== 'favorites');
 
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.getElementById(section + 'Link');
@@ -1179,6 +1373,128 @@
             scheduleCartSync();
         }
 
+        // --- Favorites (Firestore) ---
+        let favoritesState = { items: [] }; // items: [{ productId, addedAt }]
+        let favoritesSyncTimer = null;
+
+        function getFavoritesDocRef(uid) {
+            return window.doc(window.db, 'favorites', uid);
+        }
+
+        function isFavorite(productId) {
+            return (favoritesState.items || []).some((x) => x.productId === productId);
+        }
+
+        function getFavoriteProductIdsSet() {
+            return new Set((favoritesState.items || []).map((x) => x.productId));
+        }
+
+        async function loadFavoritesFromFirestore(uid) {
+            if (!uid) return;
+            if (!window.db || !window.doc || !window.getDoc) return;
+            try {
+                const snap = await window.getDoc(getFavoritesDocRef(uid));
+                if (snap.exists()) {
+                    const d = snap.data() || {};
+                    favoritesState = { items: Array.isArray(d.items) ? d.items : [] };
+                } else {
+                    favoritesState = { items: [] };
+                }
+            } catch (e) {
+                console.error('loadFavoritesFromFirestore:', e);
+                favoritesState = { items: [] };
+            }
+            renderShopProducts(getFilteredProducts());
+            renderFavoritesSection();
+        }
+
+        function scheduleFavoritesSync() {
+            if (!currentUid) return;
+            if (!window.db || !window.doc || !window.setDoc) return;
+            if (favoritesSyncTimer) clearTimeout(favoritesSyncTimer);
+            favoritesSyncTimer = setTimeout(async () => {
+                try {
+                    await window.setDoc(getFavoritesDocRef(currentUid), {
+                        userId: currentUid,
+                        items: favoritesState.items || [],
+                        updatedAt: window.serverTimestamp ? window.serverTimestamp() : new Date()
+                    }, { merge: true });
+                } catch (e) {
+                    console.error('saveFavoritesToFirestore:', e);
+                }
+            }, 350);
+        }
+
+        function toggleFavorite(productId) {
+            const items = favoritesState.items || [];
+            const idx = items.findIndex((x) => x.productId === productId);
+            if (idx >= 0) {
+                items.splice(idx, 1);
+                favoritesState.items = items;
+                showToast('تمت إزالة المنتج من المفضلة', false);
+            } else {
+                items.unshift({ productId, addedAt: new Date().toISOString() });
+                favoritesState.items = items;
+                showToast('تمت إضافة المنتج للمفضلة', false);
+            }
+            renderShopProducts(getFilteredProducts());
+            renderFavoritesSection();
+            scheduleFavoritesSync();
+        }
+
+        function renderFavoritesSection() {
+            const grid = document.getElementById('favoritesGrid');
+            if (!grid) return;
+
+            const ids = (favoritesState.items || []).map((x) => x.productId);
+            const favProducts = ids.map((id) => getProductById(id)).filter(Boolean);
+
+            if (!favProducts.length) {
+                grid.innerHTML = `
+                    <div class="dashboard-card col-span-full text-center">
+                        <p class="text-gray-500 font-bold">لا يوجد منتجات مفضلة بعد.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = favProducts.map((p) => `
+                <div class="dashboard-card flex flex-col relative">
+                    <button type="button"
+                            onclick="toggleFavorite('${p.id}')"
+                            class="absolute top-4 left-4 w-12 h-12 rounded-full bg-white/90 backdrop-blur border border-gray-200 flex items-center justify-center hover:scale-110 transition"
+                            aria-label="إزالة من المفضلة">
+                        <i class="fas fa-heart text-red-500 text-xl"></i>
+                    </button>
+                    <div class="mb-4 rounded-2xl overflow-hidden bg-gray-100 h-44 flex items-center justify-center">
+                        <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-black text-lg mb-1">${p.name}</h3>
+                            <p class="text-gray-500 text-sm font-medium mb-2">كود: ${p.id}</p>
+                            <p class="text-gray-500 text-sm font-bold mb-2">التصنيف: ${categoryLabels[p.category] || p.category}</p>
+                            <p class="text-xl font-black">${p.price.toLocaleString('ar-EG')} ج.م</p>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between gap-3">
+                            <button type="button"
+                                    class="bg-black text-white w-12 h-12 rounded-xl font-black text-xl hover:bg-gray-900 transition"
+                                    onclick="addToCart('${p.id}')">+</button>
+
+                            <div class="flex-1 text-center">
+                                <p class="text-xs text-gray-500 font-bold mb-1">الكمية في السلة</p>
+                                <p class="text-2xl font-black">${cartItems[p.id]?.qty || 0}</p>
+                            </div>
+
+                            <button type="button"
+                                    class="bg-white border border-gray-200 text-black w-12 h-12 rounded-xl font-black text-xl hover:bg-gray-100 transition"
+                                    onclick="removeFromCart('${p.id}')">-</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function updateCartUI() {
             const cartCount = Object.values(cartItems).reduce((sum, item) => sum + (item.qty || 0), 0);
             const navBadge = document.getElementById('navCartCount');
@@ -1299,13 +1615,14 @@
         function renderCartShippingSummary() {
             const el = document.getElementById('cartShippingSummary');
             if (!el) return;
-            const address = getShippingAddress();
+            const address = getDefaultShippingAddress();
             if (!address) {
                 el.innerHTML = '<p class="text-gray-500">لم تقم بإضافة عنوان بعد.</p>';
                 return;
             }
             el.innerHTML = `
                 <div class="space-y-2">
+                    <p><span class="text-gray-500">اسم العنوان:</span> ${address.label || 'عنوان'}</p>
                     <p><span class="text-gray-500">المحافظة:</span> ${address.city}</p>
                     <p><span class="text-gray-500">المنطقة:</span> ${address.district}</p>
                     <p><span class="text-gray-500">الشارع:</span> ${address.street}</p>
@@ -1404,8 +1721,15 @@
         function renderShopProducts(list = shopProducts) {
             const container = document.getElementById('productsGrid');
             if (!container) return;
+            const favSet = getFavoriteProductIdsSet();
             container.innerHTML = list.map((p) => `
-                <div class="dashboard-card flex flex-col">
+                <div class="dashboard-card flex flex-col relative">
+                    <button type="button"
+                            onclick="toggleFavorite('${p.id}')"
+                            class="absolute top-4 left-4 w-12 h-12 rounded-full bg-white/90 backdrop-blur border border-gray-200 flex items-center justify-center hover:scale-110 transition"
+                            aria-label="مفضلة">
+                        <i class="fas fa-heart ${favSet.has(p.id) ? 'text-red-500' : 'text-gray-300'} text-xl"></i>
+                    </button>
                     <div class="mb-4 rounded-2xl overflow-hidden bg-gray-100 h-44 flex items-center justify-center">
                         <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">
                     </div>
@@ -1473,6 +1797,8 @@
             applyProductFilters();
             updateCartUI();
             renderCartTable();
+            renderShippingAddressesUI();
+            renderFavoritesSection();
 
             const applyBtn = document.getElementById('applyFiltersBtn');
             const resetBtn = document.getElementById('resetFiltersBtn');
@@ -1500,7 +1826,7 @@
                 return;
             }
 
-            const address = getShippingAddress();
+            const address = getDefaultShippingAddress();
             if (!address) {
                 showToast('يرجى إضافة عنوان الشحن أولاً.', true);
                 toggleModal('shippingModal');
