@@ -11,32 +11,47 @@
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #f8f9fa; color: #1a1a1a; }
         
+        /* Top nav (modern glass UI) */
         .nav-wrapper {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 1100px; z-index: 1000;
-            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px);
-            border-radius: 25px; padding: 15px 35px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 1100px; z-index: 1000;
+            background: rgba(18, 18, 18, 0.82);
+            backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 22px; padding: 12px 22px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+            transition: all 0.35s ease;
         }
-        .nav-wrapper.scrolled { top: 0; width: 100%; max-width: 100%; border-radius: 0; padding: 10px 60px; background: #000; }
-
-        .logo {
-            position: relative;
-            font-size: 28px;
-            font-weight: 900;
-            color: white;
+        .nav-logo { font-weight: 900; font-size: 1.55rem; color: #fff; text-decoration: none; letter-spacing: 1px; }
+        .nav-logo .dot { color: #ff4757; }
+        .nav-links { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .nav-item {
+            color: #bdbdbd; padding: 9px 14px; border-radius: 14px;
+            transition: all 0.25s ease; font-weight: 800; font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: 8px;
+            background: transparent;
             text-decoration: none;
-            letter-spacing: -1px;
-            display: inline-block;
-            transition: all 0.3s ease;
+            border: 1px solid transparent;
         }
-        .logo:hover { letter-spacing: 1px; text-shadow: 0 0 6px rgba(255,255,255,0.6), 0 0 12px rgba(255,255,255,0.4), 0 0 20px rgba(255,255,255,0.2); }
-
-        .nav-link { position: relative; font-weight: 600; color: #ffffff; padding: 5px 0; transition: 0.3s; opacity: 0.8; }
-        .nav-link:hover { opacity: 1; }
-        .nav-link::after { content: ""; position: absolute; bottom: -2px; left: 50%; width: 0; height: 2px; background: #ffffff; transition: all 0.3s ease; transform: translateX(-50%); }
-        .nav-link:hover::after { width: 100%; }
+        .nav-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
+        }
+        .nav-item.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .nav-item i { font-size: 1.05rem; }
+        .logout-btn {
+            background: #ff4757;
+            color: #fff !important;
+            border-color: rgba(255, 71, 87, 0.6) !important;
+        }
+        .logout-btn:hover { background: #ff6b81; transform: translateY(-2px); }
 
         .modal { 
             display: none; 
@@ -295,36 +310,41 @@
 </head>
 <body style="display:none;">
 
-    <nav id="main-nav" class="nav-wrapper flex justify-between items-center">
-        <a href="dashboard.html" class="logo">
-    NICHE
-</a>
-        <ul class="hidden md:flex gap-10">
-            <li><a href="dashboard.html" class="nav-link">الرئيسية</a></li>
-            <li><a href="shoes.html" class="nav-link">الأحذية</a></li>
-            <li><a href="clothes.html" class="nav-link">الملابس</a></li>
-            <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
-        </ul>
-        <div class="flex items-center gap-6">
-            <div class="account-menu" id="dashboardAccountMenu">
-                <button type="button" class="account-button" aria-label="حساب المستخدم" onclick="toggleAccountMenu(event)">
-                    <i class="fas fa-user"></i>
-                </button>
-                <div class="account-dropdown">
-                    <a href="#" onclick="activateSection('settings'); closeAccountMenu(); return false;">
-                        <i class="fas fa-user-cog"></i>
-                        إعدادات الحساب
-                    </a>
-                    <a href="#" onclick="handleLogout(); closeAccountMenu(); return false;">
-                        <i class="fas fa-sign-out-alt"></i>
-                        تسجيل خروج
-                    </a>
-                </div>
-            </div>
-            <div onclick="activateSection('cart'); return false;" class="relative cursor-pointer hover:scale-110 transition">
-                <span class="text-2xl">🛒</span>
+    <nav id="main-nav" class="nav-wrapper">
+        <a href="dashboard.html" class="nav-logo">NICHE <span class="dot">.</span></a>
+        
+        <div class="nav-links">
+            <a href="javascript:void(0)"
+               onclick="activateSection('dashboard'); return false;"
+               class="nav-item active"
+               id="topNavDashboard">
+                <i class="fas fa-th-large"></i> <span>الرئيسية</span>
+            </a>
+            <a href="javascript:void(0)"
+               onclick="activateSection('orders'); return false;"
+               class="nav-item"
+               id="topNavOrders">
+                <i class="fas fa-shopping-bag"></i> <span>طلباتي</span>
+            </a>
+            <a href="javascript:void(0)"
+               onclick="activateSection('settings'); return false;"
+               class="nav-item"
+               id="topNavSettings">
+                <i class="fas fa-user-circle"></i> <span>حسابي</span>
+            </a>
+            <a href="javascript:void(0)"
+               onclick="activateSection('cart'); return false;"
+               class="nav-item relative"
+               id="topNavCart">
+                <i class="fas fa-shopping-cart"></i> <span>السلة</span>
                 <span id="navCartCount" class="absolute -top-2 -right-2 bg-white text-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">0</span>
-            </div>
+            </a>
+            <a href="javascript:void(0)"
+               onclick="handleLogout(); return false;"
+               class="nav-item logout-btn"
+               id="topNavLogout">
+                <i class="fas fa-sign-out-alt"></i> <span>خروج</span>
+            </a>
         </div>
     </nav>
 
@@ -1597,6 +1617,19 @@
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.getElementById(section + 'Link');
             if (activeLink) activeLink.classList.add('active');
+
+            // top nav active state
+            const topLinks = [
+                { id: 'topNavDashboard', section: 'dashboard' },
+                { id: 'topNavOrders', section: 'orders' },
+                { id: 'topNavSettings', section: 'settings' },
+                { id: 'topNavCart', section: 'cart' }
+            ];
+            topLinks.forEach((l) => {
+                const el = document.getElementById(l.id);
+                if (!el) return;
+                el.classList.toggle('active', section === l.section);
+            });
 
             updateBottomContinueBarVisibility();
         }
