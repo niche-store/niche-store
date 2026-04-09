@@ -70,6 +70,28 @@
         }
         input:focus { border-color: #000 !important; background: #fff !important; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
 
+        select {
+            width: 100%;
+            padding: 16px 22px;
+            padding-left: 52px; /* space for the chevron in RTL */
+            background: #f8f9fa !important;
+            border: 2px solid transparent !important;
+            border-radius: 18px;
+            outline: none;
+            transition: 0.3s;
+            font-weight: 700;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M6 8l4 4 4-4' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 18px 50%;
+        }
+        select:focus {
+            border-color: #000 !important;
+            background: #fff !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+        }
+
         .btn-action {
             background: #000; color: #fff; width: 100%; padding: 18px;
             border-radius: 18px; font-weight: 900; font-size: 18px;
@@ -630,8 +652,7 @@
                 <input type="hidden" id="shippingId">
                 <div class="mb-4">
                     <label class="text-[12px] font-black uppercase mb-1 block mr-1">اسم العنوان</label>
-                    <select id="shippingLabel" required
-                            class="w-full p-[16px] px-[22px] bg-[#f8f9fa] border-2 border-transparent rounded-[18px] font-semibold outline-none transition">
+                    <select id="shippingLabel" required>
                         <option value="" disabled selected>اختر</option>
                         <option value="المنزل">المنزل</option>
                         <option value="العمل">العمل</option>
@@ -694,7 +715,7 @@
 
     <!-- Bottom Continue Bar -->
     <div id="bottomContinueBar" class="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-3xl z-[1500] hidden">
-        <div class="bg-black text-white rounded-2xl shadow-2xl px-5 py-4 flex items-center justify-between gap-4">
+        <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-sky-500 text-white rounded-2xl shadow-2xl px-5 py-4 flex items-center justify-between gap-4">
             <div class="text-sm font-black">
                 لديك منتجات في السلة
             </div>
