@@ -765,32 +765,16 @@
 
         function updateSettingsForm(user) {
             const displayName = user.displayName || user.email.split('@')[0];
+            const meta = getAccountMeta(user.uid);
             document.getElementById('settingsName').value = displayName;
             document.getElementById('settingsEmail').value = user.email;
+            document.getElementById('settingsPhone').value = meta.phone || '';
+            document.getElementById('settingsGender').value = meta.gender || '';
             document.getElementById('settingsCurrentPassword').value = '';
             document.getElementById('settingsNewPassword').value = '';
             document.getElementById('settingsConfirmPassword').value = '';
-            // جلب البيانات من Firestore
-            (async () => {
-                try {
-                    const docRef = window.doc(window.db, "users", user.uid);
-                    const docSnap = await window.getDoc(docRef);
-                    let meta = { phone: '', gender: '' };
-                    if (docSnap.exists()) {
-                        meta = docSnap.data();
-                        // كاش محلي
-                        saveAccountMeta(user.uid, meta);
-                    }
-                    document.getElementById('settingsPhone').value = meta.phone || '';
-                    document.getElementById('settingsGender').value = meta.gender || '';
-                    selectGender(meta.gender || '');
-                } catch (e) {
-                    document.getElementById('settingsPhone').value = '';
-                    document.getElementById('settingsGender').value = '';
-                    selectGender('');
-                }
-                checkPasswordStrength('');
-            })();
+            selectGender(meta.gender || '');
+            checkPasswordStrength('');
         }
 
         async function handleAccountSettingsSave(event) {
@@ -856,9 +840,6 @@
                     await window.updatePassword(user, password);
                 }
 
-                // حفظ البيانات في Firestore
-                await window.setDoc(window.doc(window.db, "users", user.uid), { phone, gender }, { merge: true });
-                // كاش محلي
                 saveAccountMeta(user.uid, { phone, gender });
 
                 showToast('تم حفظ إعدادات الحساب بنجاح.', false);
