@@ -257,6 +257,10 @@
                     </a>
                 </div>
             </div>
+            <div class="relative cursor-pointer hover:scale-110 transition">
+                <span class="text-2xl">🛒</span>
+                <span id="navCartCount" class="absolute -top-2 -right-2 bg-white text-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">0</span>
+            </div>
         </div>
     </nav>
 
@@ -271,7 +275,7 @@
             
             <div class="lg:col-span-1 space-y-2">
                 <a href="#" id="dashboardLink" onclick="activateSection('dashboard'); return false;" class="sidebar-link active"><i class="fas fa-th-large"></i> لوحة التحكم</a>
-                <a href="shop.html" class="sidebar-link"><i class="fas fa-shopping-bag"></i> اطلب منتجات</a>
+                <a href="#" id="shopLink" onclick="activateSection('shop'); return false;" class="sidebar-link"><i class="fas fa-shopping-bag"></i> اطلب منتجات</a>
                 <a href="#" class="sidebar-link"><i class="fas fa-box"></i> طلباتي</a>
                 <a href="#" class="sidebar-link"><i class="fas fa-heart"></i> المفضلة</a>
                 <a href="#" id="settingsLink" onclick="activateSection('settings'); return false;" class="sidebar-link"><i class="fas fa-user-cog"></i> إعدادات الحساب</a>
@@ -414,6 +418,31 @@
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+
+                <div id="shopSection" class="space-y-8 hidden">
+                    <div class="dashboard-card">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-xl font-black">اطلب منتجات</h2>
+                                <p class="text-gray-500 text-sm mt-2">اختر من المنتجات المتاحة وأضفها إلى سلتك.</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-gray-500 font-bold">عدد المنتجات في السلة:</span>
+                                <span id="shopCartCount" class="inline-flex items-center justify-center bg-black text-white rounded-full w-8 h-8 text-sm font-black">0</span>
+                            </div>
+                        </div>
+
+                        <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- يتم توليد المنتجات ديناميكياً عبر JavaScript -->
+                        </div>
+
+                        <div class="mt-8 flex justify-end">
+                            <button id="checkoutBtn" class="btn-action w-full md:w-auto hidden">
+                                المتابعة للدفع
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -759,8 +788,12 @@
         function activateSection(section) {
             const dashboard = document.getElementById('dashboardOverviewSection');
             const settings = document.getElementById('accountSettingsSection');
-            dashboard.classList.toggle('hidden', section !== 'dashboard');
-            settings.classList.toggle('hidden', section !== 'settings');
+            const shop = document.getElementById('shopSection');
+
+            if (dashboard) dashboard.classList.toggle('hidden', section !== 'dashboard');
+            if (settings) settings.classList.toggle('hidden', section !== 'settings');
+            if (shop) shop.classList.toggle('hidden', section !== 'shop');
+
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             const activeLink = document.getElementById(section + 'Link');
             if (activeLink) activeLink.classList.add('active');
@@ -922,6 +955,69 @@
             }
         }
 
+        // --- Simple cart for shop section ---
+        let cartCount = 0;
+
+        function updateCartUI() {
+            const navBadge = document.getElementById('navCartCount');
+            const shopBadge = document.getElementById('shopCartCount');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            if (navBadge) navBadge.textContent = cartCount;
+            if (shopBadge) shopBadge.textContent = cartCount;
+            if (checkoutBtn) {
+                checkoutBtn.classList.toggle('hidden', cartCount === 0);
+            }
+        }
+
+        function addToCart(productId) {
+            cartCount += 1;
+            updateCartUI();
+            showToast('تم إضافة المنتج إلى السلة', false);
+        }
+
+        const shopProducts = (() => {
+            const baseImages = [
+                'https://i.postimg.cc/BvDv713h/men-s-clothing-store-business-suit-on-a-mannequin-photo.jpg',
+                'https://i.postimg.cc/qvFt5T36/clothes-hang-on-hangers-illustration-ai-generative-free-photo.jpg',
+                'https://i.postimg.cc/5yWLkMD3/colorful-baby-clothes-stockcake.webp',
+                'https://i.postimg.cc/3w7W3fPf/sneakers.jpg',
+                'https://i.postimg.cc/9M0vZ3L0/hoodie.jpg'
+            ];
+            const products = [];
+            for (let i = 1; i <= 100; i++) {
+                const img = baseImages[(i - 1) % baseImages.length];
+                products.push({
+                    id: 'P' + String(i).padStart(3, '0'),
+                    name: 'منتج رقم ' + i,
+                    price: ((i % 20) + 5) * 50, // سعر متغيّر بسيط
+                    image: img
+                });
+            }
+            return products;
+        })();
+
+        function renderShopProducts() {
+            const container = document.getElementById('productsGrid');
+            if (!container) return;
+            container.innerHTML = shopProducts.map((p) => `
+                <div class="dashboard-card flex flex-col">
+                    <div class="mb-4 rounded-2xl overflow-hidden bg-gray-100 h-44 flex items-center justify-center">
+                        <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-black text-lg mb-1">${p.name}</h3>
+                            <p class="text-gray-500 text-sm font-medium mb-2">كود: ${p.id}</p>
+                            <p class="text-xl font-black">${p.price.toLocaleString('ar-EG')} ج.م</p>
+                        </div>
+                        <button type="button" class="btn-action mt-4" onclick="addToCart('${p.id}')">
+                            أضف إلى السلة
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         // Firebase Auth State
         const checkAuth = setInterval(() => {
             if (window.auth) {
@@ -954,6 +1050,11 @@
                 toggleModal('shippingModal');
             }
         };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderShopProducts();
+            updateCartUI();
+        });
     </script>
 </body>
 </html>
