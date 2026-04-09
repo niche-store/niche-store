@@ -320,7 +320,7 @@
                 <div class="dashboard-card">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-black">أحدث الطلبات</h2>
-                        <a href="shop.html" class="text-blue-600 text-sm font-bold hover:underline">طلب جديد +</a>
+                        <a href="#" onclick="activateSection('shop'); return false;" class="text-blue-600 text-sm font-bold hover:underline">طلب جديد +</a>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-right border-collapse">
@@ -670,6 +670,18 @@
     <div id="successToast" class="success-toast">
         <div id="toastIcon" class="check-icon">✓</div>
         <span id="toastMessage" class="toast-text"></span>
+    </div>
+
+    <!-- Bottom Continue Bar -->
+    <div id="bottomContinueBar" class="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-3xl z-[1500] hidden">
+        <div class="bg-black text-white rounded-2xl shadow-2xl px-5 py-4 flex items-center justify-between gap-4">
+            <div class="text-sm font-black">
+                لديك منتجات في السلة
+            </div>
+            <button id="bottomContinueBtn" type="button" class="bg-white text-black px-6 py-3 rounded-xl font-black text-sm hover:bg-gray-200 transition">
+                المتابعة
+            </button>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -1807,10 +1819,14 @@
             const navBadge = document.getElementById('navCartCount');
             const shopBadge = document.getElementById('shopCartCount');
             const checkoutBtn = document.getElementById('checkoutBtn');
+            const bottomBar = document.getElementById('bottomContinueBar');
             if (navBadge) navBadge.textContent = cartCount;
             if (shopBadge) shopBadge.textContent = cartCount;
             if (checkoutBtn) {
                 checkoutBtn.classList.toggle('hidden', cartCount === 0);
+            }
+            if (bottomBar) {
+                bottomBar.classList.toggle('hidden', cartCount === 0);
             }
         }
 
@@ -2116,6 +2132,13 @@
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', async () => {
                     await confirmOrderFlow();
+                });
+            }
+
+            const bottomBtn = document.getElementById('bottomContinueBtn');
+            if (bottomBtn) {
+                bottomBtn.addEventListener('click', () => {
+                    activateSection('cart');
                 });
             }
         });
