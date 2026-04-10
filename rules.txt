@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // users (frontend loyalty enabled)
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // messages
+    match /messages/{message} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // carts
+    match /carts/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // orders
+    match /orders/{orderId} {
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+
+      // (A) user can ONLY cancel (pending -> cancelled) with cancelledAt
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid
+                    && (
+                      (
+                        resource.data.status == "pending"
+                        && request.resource.data.status == "cancelled"
+                        && request.resource.data.diff(resource.data).changedKeys()
+                             .hasOnly(['status', 'cancelledAt'])
+                        && request.resource.data.keys().hasAll(['cancelledAt'])
+                      )
+                      ||
+                      (
+                        // (B) allow marking delivery points flag ONLY AFTER status is completed
+                        resource.data.status == "completed"
+                        && request.resource.data.status == resource.data.status
+                        && (resource.data.loyaltyDeliveredApplied != true)
+                        && request.resource.data.diff(resource.data).changedKeys()
+                             .hasOnly(['loyaltyDeliveredApplied', 'loyaltyDeliveredAt', 'loyaltyDeliveredDelta'])
+                        && request.resource.data.loyaltyDeliveredApplied == true
+                        && request.resource.data.loyaltyDeliveredDelta == 50
+                      )
+                    );
+
+      allow delete: if false;
+    }
+
+    // favorites
+    match /favorites/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // shippingAddresses
+    match /shippingAddresses/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سياسة الموقع | متجر نيتش</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #fdfdfd; scroll-behavior: smooth; overflow-x: hidden; color: #1a1a1a; }
+        .nav-wrapper {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 1100px; z-index: 1000;
+            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(12px);
+            border-radius: 25px; padding: 15px 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transition: all 0.5s cubic-bezier(0.23,1,0.32,1);
+        }
+        .nav-wrapper.scrolled { top: 0; width: 100%; max-width: 100%; border-radius: 0; padding: 10px 60px; background: #000; }
+        .nav-link { position: relative; font-weight: 600; color: #ffffff; padding: 5px 0; transition: 0.3s; opacity: 0.8; }
+        .nav-link:hover { opacity: 1; }
+        .nav-link::after {
+            content: ""; position: absolute; bottom: -2px; left: 50%;
+            width: 0; height: 2px; background: #ffffff;
+            transition: all 0.3s ease; transform: translateX(-50%);
+        }
+        .nav-link:hover::after { width: 100%; }
+        .logo {
+            position: relative; font-size: 28px; font-weight: 900;
+            color: white; text-decoration: none; letter-spacing: -1px;
+            display: inline-block; transition: all 0.3s ease;
+        }
+        .logo::after {
+            content: ""; position: absolute; bottom: -6px; left: 50%;
+            width: 0%; height: 2px; background: white;
+            transform: translateX(-50%); transition: width 0.3s ease;
+        }
+        .logo:hover {
+            letter-spacing: 1px;
+            text-shadow: 0 0 6px rgba(255,255,255,0.6), 0 0 12px rgba(255,255,255,0.4), 0 0 20px rgba(255,255,255,0.2);
+        }
+        .logo:hover::after { width: 100%; }
+        .hero-section {
+            background: radial-gradient(circle at 10% 20%, #f9f9f9 0%, #ffffff 100%);
+            padding: 220px 20px 100px; position: relative; overflow: hidden;
+        }
+        .blur-circle {
+            position: absolute; width: 400px; height: 400px; border-radius: 50%;
+            filter: blur(120px); opacity: 0.8; animation: floatRandom 18s ease-in-out infinite;
+        }
+        .circle-1 { background: #000; top: 10%; right: 10%; animation-delay: 0s; animation-duration: 10s; }
+        .circle-2 { background: #999; bottom: 10%; left: 10%; animation-delay: 4s; animation-duration: 15s; }
+        @keyframes floatRandom {
+            0% { transform: translate(0,0) scale(1); }
+            20% { transform: translate(60px,-40px) scale(1.05); }
+            40% { transform: translate(-50px,60px) scale(0.95); }
+            60% { transform: translate(40px,30px) scale(1.02); }
+            80% { transform: translate(-30px,-50px) scale(0.98); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+        .policy-section {
+            background: white; border-radius: 30px; padding: 40px;
+            margin-bottom: 30px; border: 2px solid #f1f1f1;
+            transition: all 0.3s ease;
+        }
+        .policy-section:hover {
+            border-color: #000;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        }
+        .policy-section h2 {
+            font-size: 2rem; font-weight: 900; margin-bottom: 20px;
+            color: #000; display: flex; align-items: center; gap: 15px;
+        }
+        .policy-section h3 {
+            font-size: 1.5rem; font-weight: 800; margin-top: 25px;
+            margin-bottom: 15px; color: #1a1a1a;
+        }
+        .policy-section p, .policy-section li {
+            line-height: 2; color: #555; font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .policy-section ul {
+            list-style: none; padding-right: 0;
+        }
+        .policy-section ul li {
+            padding-right: 30px; position: relative;
+        }
+        .policy-section ul li::before {
+            content: "✓"; position: absolute; right: 0;
+            color: #000; font-weight: 900; font-size: 1.2rem;
+        }
+        .icon-badge {
+            width: 50px; height: 50px; background: #000;
+            color: white; border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+        }
+        .highlight-box {
+            background: #f8f9fa; border-right: 5px solid #000;
+            padding: 20px 25px; border-radius: 15px; margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav id="main-nav" class="nav-wrapper flex justify-between items-center">
+        <a href="index.html" class="logo">NICHE</a>
+        <ul class="hidden md:flex gap-10">
+            <li><a href="index.html" class="nav-link">الرئيسية</a></li>
+            <li><a href="shoes.html" class="nav-link">الأحذية</a></li>
+            <li><a href="clothes.html" class="nav-link">الملابس</a></li>
+            <li><a href="contact.html" class="nav-link">تواصل معنا</a></li>
+            <li><a href="faq.html" class="nav-link">الأسئلة الشائعة</a></li>
+        </ul>
+        <div class="flex items-center gap-6">
+            <div onclick="window.location.href='index.html'" class="text-white cursor-pointer hover:scale-110 transition flex items-center gap-2">
+                <span class="text-xs font-bold hidden md:block">حسابي</span>
+                <span class="text-2xl" style="filter: brightness(0) invert(1);">👤</span>
+            </div>
+            <div class="relative cursor-pointer hover:scale-110 transition">
+                <span class="text-2xl">🛒</span>
+                <span class="absolute -top-2 -right-2 bg-white text-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section text-center relative overflow-hidden min-h-[500px] flex items-center justify-center">
+        <div class="absolute inset-0 overflow-hidden z-0">
+            <div class="blur-circle circle-1"></div>
+            <div class="blur-circle circle-2"></div>
+        </div>
+        <div class="relative z-10 max-w-4xl mx-auto">
+            <span class="inline-flex items-center gap-3 bg-white text-black px-6 py-3 rounded-full font-black shadow-xl mb-8">
+                <span>📋</span> سياسة الموقع
+            </span>
+            <h1 class="text-6xl md:text-8xl font-black mb-8 text-gray-900 tracking-tighter">
+                الشروط والأحكام
+            </h1>
+            <p class="text-gray-500 text-lg md:text-xl mb-12 max-w-2xl mx-auto font-medium">
+                نلتزم بالشفافية الكاملة في جميع تعاملاتنا معك
+            </p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-24 max-w-5xl">
+        
+        <!-- سياسة الخصوصية -->
+        <div class="policy-section">
+            <h2>
+                <div class="icon-badge">🔒</div>
+                سياسة الخصوصية
+            </h2>
+            <p>
+                في متجر نيتش، نحن نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية. هذه السياسة توضح كيفية جمع واستخدام وحماية معلوماتك.
+            </p>
+            
+            <h3>المعلومات التي نجمعها:</h3>
+            <ul>
+                <li>الاسم الكامل والبريد الإلكتروني</li>
+                <li>رقم الهاتف وعنوان التوصيل</li>
+                <li>معلومات الدفع (مشفرة بالكامل)</li>
+                <li>سجل الطلبات والمشتريات</li>
+            </ul>
+
+            <h3>كيف نستخدم معلوماتك:</h3>
+            <ul>
+                <li>معالجة وتنفيذ طلباتك</li>
+                <li>التواصل معك بخصوص طلباتك</li>
+                <li>تحسين خدماتنا وتجربة التسوق</li>
+                <li>إرسال عروض وتحديثات (يمكنك إلغاء الاشتراك في أي وقت)</li>
+            </ul>
+
+            <div class="highlight-box">
+                <p class="font-black text-lg mb-2">🛡️ التزامنا بالأمان</p>
+                <p class="mb-0">نستخدم أحدث تقنيات التشفير لحماية بياناتك. لن نشارك معلوماتك الشخصية مع أي طرف ثالث دون موافقتك الصريحة.</p>
+            </div>
+        </div>
+
+        <!-- سياسة الشحن والتوصيل -->
+        <div class="policy-section">
+            <h2>
+                <div class="icon-badge">🚚</div>
+                سياسة الشحن والتوصيل
+            </h2>
+            
+            <h3>مدة التوصيل:</h3>
+            <ul>
+                <li>القاهرة والجيزة: من 2 إلى 4 أيام عمل</li>
+                <li>المحافظات الكبرى: من 3 إلى 5 أيام عمل</li>
+                <li>باقي المحافظات: من 5 إلى 7 أيام عمل</li>
+            </ul>
+
+            <h3>تكلفة الشحن:</h3>
+            <ul>
+                <li>شحن مجاني للطلبات أكثر من 1000 جنيه</li>
+                <li>50 جنيه للطلبات داخل القاهرة والجيزة</li>
+                <li>75 جنيه للمحافظات الأخرى</li>
+            </ul>
+
+            <h3>تتبع الشحنة:</h3>
+            <p>
+                سيتم إرسال رقم تتبع الشحنة إلى بريدك الإلكتروني ورقم هاتفك فور شحن الطلب. يمكنك متابعة حالة طلبك في أي وقت من خلال حسابك على الموقع.
+            </p>
+
+            <div class="highlight-box">
+                <p class="font-black text-lg mb-2">📦 ملاحظة هامة</p>
+                <p class="mb-0">يرجى التأكد من صحة عنوان التوصيل ورقم الهاتف. أي تأخير ناتج عن معلومات خاطئة لن نكون مسؤولين عنه.</p>
+            </div>
+        </div>
+
+        <!-- سياسة الاسترجاع والاستبدال -->
+        <div class="policy-section">
+            <h2>
+                <div class="icon-badge">↩️</div>
+                سياسة الاسترجاع والاستبدال
+            </h2>
+            
+            <h3>شروط الاسترجاع:</h3>
+            <ul>
+                <li>يمكن إرجاع المنتج خلال 14 يوماً من تاريخ الاستلام</li>
+                <li>يجب أن يكون المنتج في حالته الأصلية دون استخدام</li>
+                <li>الاحتفاظ بجميع الملصقات والعلامات التجارية</li>
+                <li>توفر الفاتورة الأصلية</li>
+            </ul>
+
+            <h3>المنتجات غير القابلة للإرجاع:</h3>
+            <ul>
+                <li>الملابس الداخلية والجوارب</li>
+                <li>المنتجات المخصصة أو المطبوعة حسب الطلب</li>
+                <li>المنتجات المستخدمة أو التالفة بسبب سوء الاستخدام</li>
+            </ul>
+
+            <h3>كيفية الإرجاع:</h3>
+            <p>
+                1. تواصل معنا عبر البريد الإلكتروني أو الهاتف<br>
+                2. احصل على رقم إرجاع (RMA)<br>
+                3. أرسل المنتج إلى عنواننا<br>
+                4. سيتم فحص المنتج واسترداد المبلغ خلال 7-10 أيام عمل
+            </p>
+
+            <h3>الاستبدال:</h3>
+            <p>
+                يمكنك استبدال المنتج بمقاس أو لون آخر خلال 14 يوماً. تكلفة الشحن للاستبدال مجانية في حالة وجود عيب في المنتج، وإلا سيتحمل العميل تكلفة الشحن.
+            </p>
+        </div>
+
+        <!-- سياسة الدفع -->
+        <div class="policy-section">
+            <h2>
+                <div class="icon-badge">💳</div>
+                سياسة الدفع
+            </h2>
+            
+            <h3>طرق الدفع المتاحة:</h3>
+            <ul>
+                <li>الدفع عند الاستلام (متاح لجميع المحافظات)</li>
+                <li>بطاقات الائتمان والخصم (Visa, Mastercard)</li>
+                <li>المحافظ الإلكترونية (فودافون كاش، اتصالات كاش، أورانج كاش)</li>
+                <li>التحويل البنكي</li>
+            </ul>
+
+            <h3>الأمان والحماية:</h3>
+            <p>
+                جميع المعاملات المالية على موقعنا محمية بتقنية SSL 256-bit encryption. نحن لا نحتفظ بمعلومات بطاقتك الائتمانية على خوادمنا.
+            </p>
+
+            <h3>الأسعار والضرائب:</h3>
+            <ul>
+                <li>جميع الأسعار معروضة بالجنيه المصري</li>
+                <li>الأسعار شاملة ضريبة القيمة المضافة</li>
+                <li>نحتفظ بالحق في تعديل الأسعار دون إشعار مسبق</li>
+            </ul>
+
+            <div class="highlight-box">
+                <p class="font-black text-lg mb-2">💰 ضمان استرداد الأموال</p>
+                <p class="mb-0">في حالة إلغاء الطلب أو الإرجاع، سيتم استرداد المبلغ كاملاً خلال 7-10 أيام عمل إلى نفس طريقة الدفع المستخدمة.</p>
+            </div>
+        </div>
+
+        <!-- سياسة الضمان -->
+        <div class="policy-section">
+            <h2>
+                <div class="icon-badge">✅</div>
+                سياسة الضمان
+            </h2>
+            
+            <p>
+                نحن نضمن جودة جميع منتجاتنا. في حالة وجود أي عيب تصنيع أو مشكلة في المنتج:
+            </p>
+
+            <ul>
+                <li>ضمان 30 يوماً على جميع الأحذية ضد عيوب التصنيع</li>
+                <li>ضمان 14 يوماً على الملابس ضد عيوب الخياطة</li>
+                <li>استبدال فوري في حالة استلام منتج تالف</li>
+                <li>فحص مجاني للمنتجات المعيبة</li>
+            </ul>
+
+            <h3>الضمان لا يشمل:</h3>
+            <ul>
+                <li>التلف الناتج عن سوء الاستخدام</li>
+                <li>التآكل الطبيعي للمنتج</li>
+                <li>الأضرار الناتجة عن الغسيل غير الصحيح</li>
+            </ul>
+        </div>
+
+        <!-- شروط الاستخدام -->
+        <div class="policy-section">
+            <h2>
+                <div class="icon-badge">📜</div>
+                شروط الاستخدام
+            </h2>
+            
+            <h3>حقوق الملكية الفكرية:</h3>
+            <p>
+                جميع المحتويات على هذا الموقع بما في ذلك النصوص، الصور، الشعارات، والتصاميم هي ملك لمتجر نيتش ومحمية بموجب قوانين حقوق النشر.
+            </p>
+
+            <h3>استخدام الموقع:</h3>
+            <ul>
+                <li>يجب أن تكون فوق 18 عاماً لإجراء عمليات شراء</li>
+                <li>يجب تقديم معلومات صحيحة ودقيقة</li>
+                <li>يحظر استخدام الموقع لأي أغراض غير قانونية</li>
+                <li>نحتفظ بالحق في إلغاء أي طلب مشبوه</li>
+            </ul>
+
+            <h3>المسؤولية:</h3>
+            <p>
+                نبذل قصارى جهدنا لضمان دقة المعلومات على الموقع، لكننا لا نتحمل المسؤولية عن أي أخطاء أو سهو. الصور المعروضة قد تختلف قليلاً عن المنتج الفعلي.
+            </p>
+        </div>
+
+        <!-- سياسة ملفات تعريف الارتباط -->
+        <div class="policy-section">
+            <h2>
+                <div class="icon-badge">🍪</div>
+                سياسة ملفات تعريف الارتباط (Cookies)
+            </h2>
+            
+            <p>
+                نستخدم ملفات تعريف الارتباط لتحسين تجربتك على موقعنا. هذه الملفات تساعدنا في:
+            </p>
+
+            <ul>
+                <li>تذكر تفضيلاتك وإعداداتك</li>
+                <li>تحليل حركة المرور على الموقع</li>
+                <li>تخصيص المحتوى والإعلانات</li>
+                <li>تحسين أداء الموقع</li>
+            </ul>
+
+            <p>
+                يمكنك تعطيل ملفات تعريف الارتباط من إعدادات المتصفح، لكن هذا قد يؤثر على بعض وظائف الموقع.
+            </p>
+        </div>
+
+        <!-- التواصل -->
+        <div class="policy-section">
+            <h2>
+                <div class="icon-badge">📞</div>
+                التواصل معنا
+            </h2>
+            
+            <p>
+                إذا كان لديك أي استفسارات أو ملاحظات حول سياساتنا، يرجى التواصل معنا:
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-6 mt-6">
+                <div class="text-center p-6 bg-gray-50 rounded-2xl">
+                    <i class="fas fa-phone-alt text-3xl mb-3"></i>
+                    <p class="font-black text-lg mb-2">الهاتف</p>
+                    <p class="text-gray-600">01014031067</p>
+                </div>
+                <div class="text-center p-6 bg-gray-50 rounded-2xl">
+                    <i class="fas fa-envelope text-3xl mb-3"></i>
+                    <p class="font-black text-lg mb-2">البريد الإلكتروني</p>
+                    <p class="text-gray-600 text-sm">niche.store.support.for.help@gmail.com</p>
+                </div>
+                <div class="text-center p-6 bg-gray-50 rounded-2xl">
+                    <i class="fas fa-map-marker-alt text-3xl mb-3"></i>
+                    <p class="font-black text-lg mb-2">العنوان</p>
+                    <p class="text-gray-600">الدقهلية، مصر</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- آخر تحديث -->
+        <div class="text-center mt-16 p-8 bg-gray-100 rounded-3xl">
+            <p class="text-gray-600 font-bold">
+                آخر تحديث لهذه السياسات: 10 أبريل 2026
+            </p>
+            <p class="text-gray-500 font-medium mt-2">
+                نحتفظ بالحق في تعديل هذه السياسات في أي وقت. سيتم إخطارك بأي تغييرات جوهرية.
+            </p>
+        </div>
+
+    </main>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('main-nav');
+            if (nav) {
+                window.scrollY > 50 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
+            }
+        });
+    </script>
+
+    <footer class="bg-black text-white pt-20 pb-10">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                <div class="col-span-1 md:col-span-1">
+                    <a href="index.html" class="text-3xl font-black text-white tracking-tighter mb-6 block">NICHE</a>
+                    <p class="text-gray-400 leading-relaxed font-medium text-sm">
+                        وجهتك الأولى للأناقة والتميز. نقدم لك تشكيلة مختارة بعناية من أفضل الأحذية والملابس التي تجمع بين الجودة العالمية والتصميم العصري.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-black text-lg mb-6 text-white">روابط هامة</h4>
+                    <ul class="space-y-4 text-gray-400 font-bold text-sm">
+                         <li><a href="dashboard.html" class="hover:text-white transition-colors">الرئيسية</a></li>
+                    <li><a href="dashboard.html" class="hover:text-white transition-colors">المنتجات</a></li>
+                    <li><a href="faq.html" class="hover:text-white transition-colors">الأسئلة الشائعة</a></li>
+                    <li><a href="contact.html" class="hover:text-white transition-colors">تواصل معنا</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-black text-lg mb-6 text-white">تواصل معنا</h4>
+                    <ul class="space-y-4 text-gray-400 font-bold text-sm">
+                        <li class="flex items-center gap-3"><i class="fas fa-map-marker-alt text-gray-300"></i> الدقهلية، مصر</li>
+                        <li class="flex items-center gap-3"><i class="fas fa-phone-alt text-gray-300"></i> 01014031067</li>
+                        <li class="flex items-center gap-3"><i class="fas fa-envelope text-gray-300"></i> niche.store.support.for.help@gmail.com</li>
+                   <a href="contact.html#contactForm" class="inline-flex items-center justify-center w-full bg-white text-black py-3 px-4 rounded-xl font-black text-sm hover:bg-gray-200 transition-all">
+                                أو أرسل لنا رسالة مباشرة هنا
+                            </a>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-black text-lg mb-6 text-white">خليك معانا</h4>
+                    <p class="text-gray-500 text-xs mb-6 font-bold">انضم إلينا الآن لتصلك أحدث العروض والخصومات الحصرية</p>
+                    <a href="index.html" 
+                        class="w-full bg-white text-black py-4 px-6 rounded-xl text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg">
+                        <span>انضم إلينا الآن</span>
+                        <i class="fas fa-user-plus text-xs"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-500 text-xs font-bold">
+                    © 2026 متجر نيتش. جميع الحقوق محفوظة.
+                </p>
+                <div class="flex gap-6 grayscale opacity-60 hover:opacity-100 transition-all">
+                    <i class="fab fa-cc-visa text-2xl"></i>
+                    <i class="fab fa-cc-mastercard text-2xl"></i>
+                    <i class="fas fa-money-bill-wave text-xl"></i>
+                </div>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-blue-600 hover:text-white transition-all text-lg">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-500 hover:text-white transition-all text-lg">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:bg-black hover:text-white transition-all text-lg">
+                        <i class="fab fa-tiktok"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
